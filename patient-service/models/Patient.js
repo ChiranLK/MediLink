@@ -4,7 +4,8 @@ const patientSchema = new mongoose.Schema({
   userId: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    trim: true
   },
   name: {
     type: String,
@@ -22,40 +23,26 @@ const patientSchema = new mongoose.Schema({
     required: true,
     enum: ['Male', 'Female', 'Other']
   },
-  contact: {
-    phone: {
-      type: String,
-      required: true,
-      match: /^\+?[1-9]\d{1,14}$/ // Basic phone validation
-    },
-    email: {
-      type: String,
-      required: true,
-      match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    }
+  phone: {
+    type: String,
+    required: true,
+    trim: true
   },
   address: {
-    street: {
-      type: String,
-      required: true
-    },
-    city: {
-      type: String,
-      required: true
-    },
-    state: {
-      type: String,
-      required: true
-    },
-    zipCode: {
-      type: String,
-      required: true
-    },
-    country: {
-      type: String,
-      required: true,
-      default: 'Sri Lanka'
-    }
+    type: String,
+    required: true,
+    trim: true
+  },
+  // Optional fields
+  bloodGroup: {
+    type: String,
+    enum: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'],
+    required: false
+  },
+  medicalHistory: {
+    type: String,
+    required: false,
+    trim: true
   }
 }, {
   timestamps: true

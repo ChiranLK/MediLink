@@ -8,13 +8,13 @@ const Patient = require('../models/Patient');
  */
 exports.createPatient = async (req, res) => {
   try {
-    const { userId, name, age, gender, contact, address } = req.body;
+    const { userId, name, age, gender, phone, address, bloodGroup, medicalHistory } = req.body;
 
     // Validate required fields
-    if (!userId || !name || !age || !gender || !contact || !address) {
+    if (!userId || !name || !age || !gender || !phone || !address) {
       return res.status(400).json({
         success: false,
-        message: 'All fields are required'
+        message: 'Required fields: userId, name, age, gender, phone, address'
       });
     }
 
@@ -33,8 +33,10 @@ exports.createPatient = async (req, res) => {
       name,
       age,
       gender,
-      contact,
-      address
+      phone,
+      address,
+      bloodGroup,      // Optional
+      medicalHistory   // Optional
     });
 
     // Save to database
@@ -50,6 +52,31 @@ exports.createPatient = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error creating patient',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get all patients
+ * @route GET /api/patients
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getAllPatients = async (req, res) => {
+  try {
+    const patients = await Patient.find().sort({ createdAt: -1 });
+    
+    res.status(200).json({
+      success: true,
+      count: patients.length,
+      data: patients
+    });
+  } catch (error) {
+    console.error('Error fetching patients:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching patients',
       error: error.message
     });
   }
@@ -132,6 +159,11 @@ exports.updatePatient = async (req, res) => {
         message: 'Cannot modify userId'
       });
     }
+
+    // Remove fields that shouldn't be updated
+    delete updateData._id;
+    delete updateData.createdAt;
+    delete updateData.userId; // Ensure userId can't be updated
 
     // Update patient
     const updatedPatient = await Patient.findByIdAndUpdate(
