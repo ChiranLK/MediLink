@@ -6,6 +6,7 @@ const uploadRoutes = require('./routes/uploadRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const prescriptionRoutes = require('./routes/prescriptionRoutes');
 const videoConsultationRoutes = require('./routes/videoConsultationRoutes');
+const medicalHistoryRoutes = require('./routes/medicalHistoryRoutes');
 
 // Middleware
 app.use(express.json());
@@ -32,6 +33,9 @@ app.use('/api/prescriptions', prescriptionRoutes);
 
 // Use video consultation routes
 app.use('/api/video-consultation', videoConsultationRoutes);
+
+// Use medical history routes
+app.use('/', medicalHistoryRoutes);
 
 // Error handling middleware for multer errors
 app.use((error, req, res, next) => {
