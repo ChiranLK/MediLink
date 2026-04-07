@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-const getAISuggestions = async (symptoms) => {
+export const getAISuggestions = async (symptoms) => {
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); // Aluth model eka use karanna
         const prompt = `As an AI medical assistant for the MediLink platform, analyze these symptoms: ${symptoms}. 
@@ -15,5 +15,3 @@ const getAISuggestions = async (symptoms) => {
         return "AI suggestions currently unavailable.";
     }
 };
-
-module.exports = { getAISuggestions };

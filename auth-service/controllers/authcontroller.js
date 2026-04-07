@@ -7,8 +7,7 @@ import {
   NotFoundError,
   BadRequestError,
 } from "../errors/costomerrors.js";
-
-
+import { verifyJWT } from "../utils/tokenutils.js";
 import { createJWT } from "../utils/tokenutils.js";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
@@ -22,6 +21,25 @@ export const register = async (req, res) => {
 
   const user = await User.create(req.body);
   res.status(StatusCodes.CREATED).json({ msg: "User Created Successfully" });
+};
+
+
+export const verifyToken = async (req, res) => {
+  const { token } = req.body; // Appointment service එකෙන් එවන ටෝකන් එක
+
+  if (!token) {
+    throw new UnauthenticatedError("no token provided");
+  }
+
+  try {
+    // JWT එක පරීක්ෂා කර userId සහ role එක ලබාගැනීම [cite: 41]
+    const { userId, role } = verifyJWT(token);
+    
+    // සාර්ථක නම් එම දත්ත ආපසු යැවීම
+    res.status(StatusCodes.OK).json({ userId, role });
+  } catch (error) {
+    throw new UnauthenticatedError("invalid token");
+  }
 };
 
 /*............................................................................................................................................ */

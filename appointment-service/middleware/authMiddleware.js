@@ -2,7 +2,12 @@ import { UnauthenticatedError, ForbiddenError } from "../errors/customErrors.js"
 import axios from "axios";
 import { StatusCodes } from "http-status-codes";
 
-export const authenticateUser = async (req, res, next) => {
+// Async error wrapper for Express middleware
+const asyncHandler = (fn) => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};
+
+export const authenticateUser = asyncHandler(async (req, res, next) => {
   // 1. Request Header එකෙන් Token එක ලබාගැනීම
   const authHeader = req.headers.authorization;
   
@@ -34,7 +39,7 @@ export const authenticateUser = async (req, res, next) => {
   } catch (error) {
     throw new UnauthenticatedError("Authentication failed");
   }
-};
+});
 
 // 4. Role-based Access Control (උදා: Patient ට පමණක් අවසර දීම) 
 export const authorizePermissions = (...roles) => {

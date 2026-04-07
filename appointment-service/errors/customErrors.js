@@ -34,3 +34,11 @@ export class BadRequestError extends Error {
       this.statusCode = StatusCodes.FORBIDDEN;
     }
   }
+
+  export class ForbiddenError extends Error {
+    constructor(message) {
+      super(message);
+      this.name = "ForbiddenError";
+      this.statusCode = StatusCodes.FORBIDDEN;
+    }
+  }
