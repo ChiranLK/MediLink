@@ -7,7 +7,7 @@ export const authenticateUser = (req, res, next) => {
 
   try {
     const { userId, role } = verifyJWT(token);
-    req.user = { userId, role };
+    req.patient = { userId, role };
 
     next();
   } catch (error) {
@@ -18,7 +18,7 @@ export const authenticateUser = (req, res, next) => {
 export const authorizePermissions = (...roles) => {
   return (req, res, next) => {
     console.log(roles);
-    if (!roles.includes(req.user.role)) {
+    if (!roles.includes(req.patient.role)) {
       throw new UnauthorizedError("not authorized to access this route");
     }
     next();

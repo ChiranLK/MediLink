@@ -4,7 +4,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "../errors/costomerrors.js";
-import User from "../models/user.js";
+import Patient from "../models/patient.js";
 
 import mongoose, { mongo } from "mongoose";
 
@@ -46,8 +46,8 @@ export const validateRegisterInput = withValidationError([
     .isEmail()
     .withMessage("Invalid email format")
     .custom(async (email) => {
-      const user = await User.findOne({ email });
-      if (user) {
+      const patient = await Patient.findOne({ email });
+      if (patient) {
         throw new BadRequestError("Email already exists");
       }
     }),
@@ -86,8 +86,8 @@ export const validateUpdateUserInput = withValidationError([
     .isEmail()
     .withMessage("Invalid email format")
     .custom(async (email, { req }) => {
-      const user = await User.findOne({ email });
-      if (user && user._id.toString() !== req.user.userId) {
+      const patient = await Patient.findOne({ email });
+      if (patient && patient._id.toString() !== req.patient.userId) {
         throw new BadRequestError("Email already exists");
       }
     }),
@@ -191,17 +191,17 @@ export const validateAdminUserUpdate = withValidationError([
     .withMessage("Location cannot be empty if provided"),
   body("role")
     .optional()
-    .isIn(["user", "admin", "organizer"])
+    .isIn(["patient", "admin", "doctor"])
     .withMessage("Invalid role specified"),
   param("id")
     .isMongoId()
     .withMessage("Invalid user ID")
     .custom(async (id, { req }) => {
-      const user = await User.findById(id);
-      if (!user) {
-        throw new NotFoundError("User not found");
+      const patient = await Patient.findById(id);
+      if (!patient) {
+        throw new NotFoundError("Patient not found");
       }
-      if (user._id.toString() === req.user.userId) {
+      if (patient._id.toString() === req.patient.userId) {
         throw new UnauthorizedError("Cannot modify your own account");
       }
     }),
@@ -222,8 +222,8 @@ export const validateAdminAddUser = withValidationError([
     .isEmail()
     .withMessage("Invalid email format")
     .custom(async (email) => {
-      const user = await User.findOne({ email });
-      if (user) {
+      const patient = await Patient.findOne({ email });
+      if (patient) {
         throw new Error("Email already exists");
       }
     }),

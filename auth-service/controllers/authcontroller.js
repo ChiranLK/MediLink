@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-import User from "../models/user.js";
+import Patient from "../models/patient.js";
 import bcrypt from "bcryptjs";
 import { hashPassword } from "../utils/passwordutils.js";
 import {
@@ -13,14 +13,14 @@ import crypto from "crypto";
 import nodemailer from "nodemailer";
 
 export const register = async (req, res) => {
-  const isFirstAccount = (await User.countDocuments()) === 0;
-  req.body.role = isFirstAccount ? "admin" : "user";
+  const isFirstAccount = (await Patient.countDocuments()) === 0;
+  req.body.role = isFirstAccount ? "admin" : "patient";
 
   const hashedPassword = await hashPassword(req.body.password);
   req.body.password = hashedPassword;
 
-  const user = await User.create(req.body);
-  res.status(StatusCodes.CREATED).json({ msg: "User Created Successfully" });
+  const user = await Patient.create(req.body);
+  res.status(StatusCodes.CREATED).json({ msg: "Patient Created Successfully" });
 };
 
 
@@ -45,15 +45,15 @@ export const verifyToken = async (req, res) => {
 /*............................................................................................................................................ */
 
 export const login = async (req, res) => {
-  const user = await User.findOne({ email: req.body.email });
+  const patient = await Patient.findOne({ email: req.body.email });
   const isValidUser =
-    user && (await bcrypt.compare(req.body.password, user.password));
+    patient && (await bcrypt.compare(req.body.password, patient.password));
 
   if (!isValidUser) throw new UnauthenticatedError("Invalid credentials");
 
   const oneday = 24 * 60 * 60 * 1000;
 
-  const token = createJWT({ userId: user._id, role: user.role });
+  const token = createJWT({ userId: patient._id, role: patient.role });
   res.cookie("token", token, {
     httpOnly: true,
     expires: new Date(Date.now() + oneday),
@@ -61,11 +61,13 @@ export const login = async (req, res) => {
   });
 
   res.status(StatusCodes.OK).json({
-    msg: "User logged in",
-    user: {
-      role: user.role,
-      name: user.fullName,
-      email: user.email,
+    msg: "Patient logged in successfully",
+    token: token,
+    patient: {
+      userId: patient._id,
+      role: patient.role,
+      name: patient.fullName,
+      email: patient.email,
     },
   });
 };
@@ -75,7 +77,7 @@ export const logout = (req, res) => {
     httpOnly: true,
     expires: new Date(Date.now()),
   });
-  res.status(StatusCodes.OK).json({ msg: "User logged out" });
+  res.status(StatusCodes.OK).json({ msg: "Patient logged out" });
 };
 
 // Configure Nodemailer transporter
@@ -102,20 +104,20 @@ export const forgotPassword = async (req, res) => {
       frontend: process.env.FRONTEND_URL,
     });
 
-    // Find user by email
-    const user = await User.findOne({ email });
-    if (!user) {
-      throw new NotFoundError("No user found with this email");
+    // Find patient by email
+    const patient = await Patient.findOne({ email });
+    if (!patient) {
+      throw new NotFoundError("No patient found with this email");
     }
 
     // Generate reset token and set expiry
     const resetToken = crypto.randomBytes(32).toString("hex");
     const resetTokenExpiry = Date.now() + 3600000; // 1 hour from now
 
-    // Save token and expiry to user document
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpiry = resetTokenExpiry;
-    await user.save();
+    // Save token and expiry to patient document
+    patient.resetPasswordToken = resetToken;
+    patient.resetPasswordExpiry = resetTokenExpiry;
+    await patient.save();
 
     // Create reset URL (frontend route)
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
@@ -123,7 +125,7 @@ export const forgotPassword = async (req, res) => {
     // Email content
     const mailOptions = {
       from: process.env.EMAIL_USER,
-      to: user.email,
+      to: patient.email,
       subject: "Password Reset Request",
       html: `
         <h1>Password Reset</h1>
