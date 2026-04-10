@@ -9,7 +9,7 @@ export const getAISuggestions = async (symptoms) => {
         }
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Using stable model
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); // Correct format: lowercase with hyphens
         
         const prompt = `As an AI medical assistant for the MediLink platform, analyze these symptoms: ${symptoms}. 
                         Provide a short preliminary health suggestion and recommend the most suitable doctor specialty.`;
