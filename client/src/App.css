@@ -1,0 +1,17 @@
+/* App Container */
+.app {
+  @apply w-full min-h-screen bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300;
+}
+
+/* Ensure smooth transitions between pages */
+.app * {
+  @apply transition-all duration-200;
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    @apply !transition-none !duration-0;
+    scroll-behavior: auto !important;
+  }
+}
