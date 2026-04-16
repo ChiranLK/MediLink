@@ -8,14 +8,14 @@ const app = express();
 // IMPORTANT: Webhook routes must be registered BEFORE express.json()
 // This is because Stripe needs the raw request body for signature verification
 app.use(cors());
-app.use('/api/webhooks', webhookRouter);
+app.use('/webhooks', webhookRouter);
 
 // Now apply global JSON parsing for all other routes
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.use('/api/payments', paymentRouter);
+app.use('/payments', paymentRouter);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

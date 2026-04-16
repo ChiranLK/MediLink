@@ -2,6 +2,7 @@ import { constructEvent } from '../utils/stripeUtils.js';
 import Payment from '../models/Payment.js';
 import Transaction from '../models/Transaction.js';
 import { v4 as uuidv4 } from 'uuid';
+import axios from 'axios';
 
 export const handleStripeWebhook = async (req, res, next) => {
   try {
@@ -63,6 +64,8 @@ export const handleStripeWebhook = async (req, res, next) => {
 const handleCheckoutSessionCompleted = async (session) => {
   try {
     console.log(` Checkout session completed: ${session.id}`);
+    const appointmentId = session.metadata?.appointmentId;
+    console.log(` Extracting appointmentId from metadata: ${appointmentId || 'MISSING'}`);
 
     // Find and update payment
     const payment = await Payment.findOneAndUpdate(
@@ -88,8 +91,23 @@ const handleCheckoutSessionCompleted = async (session) => {
         stripeEventId: session.payment_intent?.id,
       });
 
-      // TODO: Notify other services (appointment, doctor, patient services)
-      // Example: Call appointment service to confirm appointment
+      // Notify appointment service to confirm appointment
+      if (appointmentId) {
+        try {
+          const appointmentServiceUrl = process.env.APPOINTMENT_SERVICE_URL || 'http://localhost:3002';
+          console.log(`Calling appointment-service at: ${appointmentServiceUrl}/api/appointments/${appointmentId}`);
+          
+          await axios.patch(`${appointmentServiceUrl}/api/appointments/${appointmentId}`, {
+            status: 'Confirmed'
+          });
+          
+          console.log(`✅ Appointment ${appointmentId} confirmed successfully via cross-service call.`);
+        } catch (apiError) {
+          console.error(`❌ Failed to confirm appointment ${appointmentId}:`, apiError.response?.data || apiError.message);
+        }
+      } else {
+        console.warn('⚠️ No appointmentId found in session metadata. Skipping confirmation.');
+      }
     }
   } catch (error) {
     console.error('Error handling checkout completion:', error.message);

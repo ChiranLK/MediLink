@@ -15,14 +15,16 @@ const startServer = async () => {
     await connectDB();
 
     app.listen(PORT, () => {
-      console.log(`🎥 Telemedicine Service running on port ${PORT}`);
-      console.log(`📋 Environment  : ${process.env.NODE_ENV}`);
-      console.log(`🔗 Base URL     : http://localhost:${PORT}/api/consultations`);
-      console.log(`❤️  Health check : http://localhost:${PORT}/health`);
-      console.log(`🎬 Platform     : Jitsi Meet (meet.jit.si) — no API key required`);
+      console.log("\n======================================");
+      console.log(` Telemedicine Service running on port ${PORT}`);
+      console.log("======================================");
+      console.log(`Environment  : ${process.env.NODE_ENV}`);
+      console.log(`Base URL     : http://localhost:${PORT}/api/consultations`);
+      console.log(`Health check : http://localhost:${PORT}/health`);
+      console.log(`Platform     : Jitsi Meet (meet.jit.si) — no API key required`);
     });
   } catch (error) {
-    console.error('❌ Failed to start Telemedicine Service:', error.message);
+    console.error('Failed to start Telemedicine Service:', error.message);
     process.exit(1);
   }
 };

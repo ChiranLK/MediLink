@@ -32,8 +32,7 @@ const appointmentSchema = new mongoose.Schema({
     },
 
     specialization: {
-        type: String,
-        enum: specializations
+        type: String
     },
 
     // doctorId stored as String to support both MongoDB ObjectIds and
@@ -62,7 +61,6 @@ const appointmentSchema = new mongoose.Schema({
     },
     recommendedSpecialty: {
         type: String,
-        enum: [...specializations, "General Medicine"],
         default: "General Medicine"
     },
     urgencyLevel: {

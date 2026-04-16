@@ -76,8 +76,14 @@ export const getAllAppointments = asyncHandler(async (req, res) => {
 
 // 3. Get Patient specific appointments [cite: 16]
 export const getMyAppointments = asyncHandler(async (req, res) => {
-  const appointments = await Appointment.find({ patientId: req.user.userId }).sort("-appointmentDate");
-  res.status(StatusCodes.OK).json({ appointments });
+  const appointments = await Appointment.find({ patientId: req.user.userId })
+    .sort("-appointmentDate")
+    .lean();
+  
+  res.status(StatusCodes.OK).json({ 
+    appointments,
+    count: appointments.length 
+  });
 });
 
 // 4. Update Appointment (Status wenas kireema - Confirm/Cancel) [cite: 22, 23]

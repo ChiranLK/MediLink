@@ -20,7 +20,7 @@ app.get("/health", (req, res) => {
     .json({ status: "OK", message: "Notification service is running" });
 });
 
-app.use("/api/notifications", notificationRoutes);
+app.use("/notifications", notificationRoutes);
 
 // Centralized fallback error handler
 app.use((error, req, res, next) => {

@@ -28,7 +28,9 @@ const startServer = async () => {
 
     // Only start listening after a successful DB connection
     app.listen(PORT, () => {
-      console.log(`Payment Service running on port ${PORT}`);
+      console.log("\n======================================");
+      console.log(` Payment Service running on port ${PORT}`);
+      console.log("======================================");
       console.log(`Environment : ${process.env.NODE_ENV}`);
       console.log(`Stripe Mode  : ${process.env.NODE_ENV === 'production' ? 'Live' : 'Test'}`);
       console.log(`Base URL     : http://localhost:${PORT}/api/payments`);

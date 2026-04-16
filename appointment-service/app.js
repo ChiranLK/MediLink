@@ -13,7 +13,7 @@ app.use(cors({
     credentials: true
 }));
 // Routes
-app.use('/api/appointments', appointmentRouter);
+app.use('/', appointmentRouter);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

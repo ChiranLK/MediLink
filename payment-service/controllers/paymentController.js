@@ -16,7 +16,7 @@ import { v4 as uuidv4 } from 'uuid';
 // Create checkout session for payment
 export const createCheckoutSession = async (req, res, next) => {
   try {
-    const { amount, paymentType, referenceId, metadata } = req.body;
+    const { amount, currency = 'lkr', paymentType, referenceId, metadata } = req.body;
     const userId = req.user?.userId || req.user?._id;
 
     if (!amount || !paymentType || !referenceId) {
@@ -31,6 +31,7 @@ export const createCheckoutSession = async (req, res, next) => {
     // Create Stripe checkout session
     const checkoutSession = await createStripeCheckoutSession(
       amount,
+      currency,
       paymentType,
       referenceId,
       {
@@ -41,29 +42,35 @@ export const createCheckoutSession = async (req, res, next) => {
       cancelUrl
     );
 
-    // Save payment to DB with pending status
-    const payment = await Payment.create({
-      userId,
-      amount,
-      currency: 'usd',
-      paymentType,
-      referenceId,
-      stripeCheckoutSessionId: checkoutSession.id,
-      status: 'pending',
-      metadata: {
-        ...metadata,
-        description: `${paymentType} payment`,
-      },
-    });
+    // Save payment to DB with pending status (Non-fatal fallback)
+    let paymentId = 'pending_in_stripe';
+    try {
+      const payment = await Payment.create({
+        userId,
+        amount,
+        currency,
+        paymentType,
+        referenceId,
+        stripeCheckoutSessionId: checkoutSession.id,
+        status: 'pending',
+        metadata: {
+          ...metadata,
+          description: `${paymentType} payment`,
+        },
+      });
+      paymentId = payment._id;
+    } catch (dbError) {
+      console.error('⚠️ DB Error: Could not save payment record, but continuing with Stripe redirect:', dbError.message);
+    }
 
     res.status(201).json({
       status: 'success',
       data: {
-        paymentId: payment._id,
+        paymentId,
         checkoutSessionId: checkoutSession.id,
         checkoutUrl: checkoutSession.url,
         amount: amount,
-        currency: 'usd',
+        currency: currency,
       },
     });
   } catch (error) {

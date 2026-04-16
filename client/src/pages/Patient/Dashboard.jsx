@@ -28,7 +28,7 @@ const PatientDashboard = () => {
   useEffect(() => {
     const loadNextAppointment = async () => {
       try {
-        const { data } = await customFetch.get('/api/appointments/my-appointments');
+        const { data } = await customFetch.get('/api/appointment/my-appointments');
         const apts = data.appointments || data.data || data || [];
         
         // Find the next upcoming confirmed appointment
@@ -186,11 +186,11 @@ const PatientDashboard = () => {
         <div className="flex flex-col gap-4 w-full">
           <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Quick Actions</h3>
           
-          <button onClick={() => navigate('/appointments')} className="flex items-center gap-4 bg-white p-4 rounded-[20px] shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all font-bold text-[#0D1C2E] text-[15px]">
+          <button onClick={() => navigate('/viewAppointments')} className="flex items-center gap-4 bg-white p-4 rounded-[20px] shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all font-bold text-[#0D1C2E] text-[15px]">
             <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-[#0D877B]">
               <PlusCircle size={20} />
             </div>
-            Book New Appointment
+            View my Appointment
           </button>
 
           <button className="flex items-center gap-4 bg-white p-4 rounded-[20px] shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all font-bold text-[#0D1C2E] text-[15px]">

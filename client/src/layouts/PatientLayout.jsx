@@ -11,8 +11,11 @@ import {
   Bell,
   Settings,
   Video,
+  Upload,
+  Pill,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { PatientAuthProvider } from '../patient/context/PatientAuthContext';
 import Logo from '../components/UI/Logo';
 
 const PatientLayout = () => {
@@ -25,13 +28,14 @@ const PatientLayout = () => {
   };
 
   const navItems = [
-    { name: 'Appointments', icon: Calendar, path: '/patient/dashboard' },
-    { name: 'Telemedicine', icon: Video, path: '/patient/telemedicine' },
-    { name: 'Doctors', icon: Users, path: '/patient/doctors' },
-    { name: 'My Prescriptions', icon: FileText, path: '/patient/prescriptions' },
-    { name: 'AI Checker', icon: Activity, path: '/patient/ai-checker' },
+    { name: 'Dashboard', icon: Activity, path: '/patient/dashboard' },
+    { name: 'My Appointments', icon: Calendar, path: '/patient/appointments' },
+    { name: 'Video Consultations', icon: Video, path: '/patient/telemedicine' },
+    { name: 'My Profile', icon: User, path: '/patient/profile' },
+    { name: 'Medical Reports', icon: Upload, path: '/patient/reports' },
+    { name: 'My Prescriptions', icon: Pill, path: '/patient/prescriptions' },
+    { name: 'Find Doctors', icon: Users, path: '/patient/doctors' },
     { name: 'Payments', icon: CreditCard, path: '/patient/payments' },
-    { name: 'Profile', icon: User, path: '/patient/profile' },
   ];
 
 
@@ -82,14 +86,14 @@ const PatientLayout = () => {
                 <img src={user.avatar} alt="User avatar" className="w-full h-full object-cover" />
                ) : (
                   <div className="w-full h-full bg-[#055153] text-white flex items-center justify-center font-bold text-lg">
-                    {user?.fullName?.charAt(0) || 'P'}
+                    {(user?.name || user?.fullName || 'P').charAt(0)}
                   </div>
                )}
             </div>
             <div>
               <p className="text-[12px] text-gray-400 font-medium tracking-wide">Welcome back</p>
               <h3 className="font-bold text-[#055153] text-[15px] leading-tight truncate w-[160px]">
-                {user?.fullName || "Sarah Jenkins"}
+                {user?.name || user?.fullName || "Patient"}
               </h3>
             </div>
           </div>
@@ -136,7 +140,9 @@ const PatientLayout = () => {
 
         {/* Dashboard Content Outlet */}
         <main className="flex-1 min-w-0 pb-20">
-          <Outlet />
+          <PatientAuthProvider>
+            <Outlet />
+          </PatientAuthProvider>
         </main>
 
       </div>

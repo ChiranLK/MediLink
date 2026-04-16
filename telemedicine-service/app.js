@@ -10,8 +10,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ── Routes ────────────────────────────────────────────────────────
-// All telemedicine endpoints: /api/consultations/*
-app.use('/api/consultations', consultationRouter);
+// All telemedicine endpoints
+app.use('/', consultationRouter);
 
 // ── Health check ─────────────────────────────────────────────────
 app.get('/health', (req, res) => {

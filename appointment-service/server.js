@@ -16,13 +16,15 @@ const startServer = async () => {
 
     // Only start listening after a successful DB connection
     app.listen(PORT, () => {
-      console.log(`🚀 Appointment Service running on port ${PORT}`);
-      console.log(`📋 Environment : ${process.env.NODE_ENV}`);
-      console.log(`🔗 Base URL     : http://localhost:${PORT}/api/appointments`);
-      console.log(`❤️  Health check : http://localhost:${PORT}/health`);
+      console.log("\n======================================");
+      console.log("Appointment Service running on port " + PORT);
+      console.log("======================================");
+      console.log(`Environment  : ${process.env.NODE_ENV}`);
+      console.log(`Base URL     : http://localhost:${PORT}/api/appointments`);
+      console.log(`Health check : http://localhost:${PORT}/health\n`);
     });
   } catch (error) {
-    console.error('❌ Failed to start Appointment Service:', error.message);
+    console.error('Failed to start Appointment Service:', error.message);
     process.exit(1);
   }
 };

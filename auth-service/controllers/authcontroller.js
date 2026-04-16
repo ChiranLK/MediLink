@@ -271,3 +271,39 @@ export const updateProfile = async (req, res) => {
     throw new BadRequestError("Failed to update profile settings");
   }
 };
+
+// Get current authenticated user from Authorization header
+export const getCurrentUser = async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization || "";
+    const token = authHeader.startsWith("Bearer ")
+      ? authHeader.split(" ")[1]
+      : null;
+
+    if (!token) {
+      throw new UnauthenticatedError("No authorization token provided");
+    }
+
+    const { userId } = verifyJWT(token);
+    const user = await Patient.findById(userId).select("-password");
+    
+    if (!user) {
+      throw new NotFoundError("User not found");
+    }
+
+    res.status(StatusCodes.OK).json({
+      user: {
+        userId: user._id,
+        role: user.role,
+        fullName: user.fullName,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+      },
+    });
+  } catch (error) {
+    if (error.name === "UnauthenticatedError" || error.name === "NotFoundError") {
+      throw error;
+    }
+    throw new UnauthenticatedError("Invalid token");
+  }
+};

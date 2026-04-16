@@ -17,9 +17,14 @@
     "mongoose": "^7.5.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.1.14"
   },
-  "keywords": ["telemedicine", "jitsi", "video-consultation", "microservice"],
+  "keywords": [
+    "telemedicine",
+    "jitsi",
+    "video-consultation",
+    "microservice"
+  ],
   "author": "",
   "license": "ISC"
 }

@@ -15,13 +15,13 @@ const connectDB = async () => {
 
     const { host, port, name } = conn.connection;
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log(`✅ MongoDB Connected`);
+    console.log(`   MongoDB Connected`);
     console.log(`   Host     : ${host}`);
     console.log(`   Database : ${name}`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   } catch (error) {
     console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.error(`❌ MongoDB Connection Failed`);
+    console.error(`   MongoDB Connection Failed`);
     console.error(`   Reason : ${error.message}`);
     console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     process.exit(1);

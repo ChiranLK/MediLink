@@ -57,7 +57,7 @@ const PatientTelemedicine = () => {
     setLoading(true);
     try {
       // 1. Get all my appointments
-      const { data: aptData } = await customFetch.get('/api/appointments/my-appointments');
+      const { data: aptData } = await customFetch.get('/api/appointment/my-appointments');
       const apts = aptData.appointments || aptData.data || aptData || [];
       setAppointments(apts);
 

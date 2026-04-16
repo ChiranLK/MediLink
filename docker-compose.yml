@@ -1,6 +1,38 @@
-version: '3.8'
-
 services:
+  # API Gateway - Entry point for all frontend requests
+  api-gateway:
+    build:
+      context: ./api-gateway
+    container_name: medilink-api-gateway
+    ports:
+      - "5001:5000"
+    environment:
+      - PORT=5000
+      - JWT_SECRET=${JWT_SECRET:-secret123}
+      - PATIENT_SERVICE=http://patient-service:3001
+      - APPOINTMENT_SERVICE=http://appointment-service:5002
+      - DOCTOR_SERVICE=http://doctor-service:3003
+      - PAYMENT_SERVICE=http://payment-service:3005
+      - AUTH_SERVICE=http://auth-service:5000
+      - AI_SERVICE=http://ai-symptom-service:3001
+      - NOTIFICATION_SERVICE=http://notification-service:5003
+      - TELEMEDICINE_SERVICE=http://telemedicine-service:3004
+    volumes:
+      - ./api-gateway:/app
+      - /app/node_modules
+    command: npx nodemon server.js
+    networks:
+      - medilink-network
+    depends_on:
+      - auth-service
+      - appointment-service
+      - doctor-service
+      - patient-service
+      - telemedicine-service
+      - notification-service
+      - payment-service
+      - ai-symptom-service
+
   auth-service:
     build:
       context: ./auth-service
@@ -9,8 +41,13 @@ services:
       - "5000:5000"
     environment:
       - PORT=5000
+      - JWT_SECRET=${JWT_SECRET:-secret123}
     env_file:
       - ./auth-service/.env
+    volumes:
+      - ./auth-service:/app
+      - /app/node_modules
+    command: npx nodemon server.js
     networks:
       - medilink-network
 
@@ -18,12 +55,15 @@ services:
     build:
       context: ./ai-symptom-service
     container_name: medilink-ai-symptom
-    ports:
-      - "5006:5006"
     environment:
-      - PORT=5006
+      - PORT=3001
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-your_gemini_api_key_here}
     env_file:
       - ./ai-symptom-service/.env
+    volumes:
+      - ./ai-symptom-service:/app
+      - /app/node_modules
+    command: npx nodemon server.js
     networks:
       - medilink-network
 
@@ -32,16 +72,22 @@ services:
       context: ./appointment-service
     container_name: medilink-appointment
     ports:
-      - "3002:3002"
+      - "5002:5002"
     environment:
-      - PORT=3002
-      - AUTH_SERVICE_URL=http://medilink-auth:5000
+      - PORT=5002
+      - AUTH_SERVICE_URL=http://auth-service:5000
+      - JWT_SECRET=${JWT_SECRET:-secret123}
+      - NODE_ENV=development
     env_file:
       - ./appointment-service/.env
+    volumes:
+      - ./appointment-service:/app
+      - /app/node_modules
+    command: npx nodemon server.js
     networks:
       - medilink-network
     depends_on:
-      - ai-symptom-service
+      - auth-service
 
   doctor-service:
     build:
@@ -51,73 +97,120 @@ services:
       - "3003:3003"
     environment:
       - PORT=3003
-      - CLOUDINARY_URL=cloudinary://334213839224793:6Vs2LWGTMoQ3tA87qcR7JovBs9k@dnjq7l123
-      - APPOINTMENT_SERVICE_URL=http://medilink-appointment:3002
-      - PATIENT_SERVICE_URL=http://medilink-patient:3000
+      - JWT_SECRET=${JWT_SECRET:-secret123}
+      - APPOINTMENT_SERVICE_URL=http://appointment-service:5002
+      - PATIENT_SERVICE_URL=http://patient-service:3001
+      - NODE_ENV=development
     env_file:
       - ./doctor-service/.env
+    volumes:
+      - ./doctor-service:/app
+      - /app/node_modules
+    command: npx nodemon server.js
     networks:
       - medilink-network
     depends_on:
       - appointment-service
       - patient-service
+      - auth-service
 
   telemedicine-service:
     build:
       context: ./telemedicine-service
     container_name: medilink-telemedicine
     ports:
-      - "4000:4000"
+      - "3004:3004"
     environment:
-      - PORT=4000
+      - PORT=3004
+      - JWT_SECRET=${JWT_SECRET:-secret123}
+      - NODE_ENV=development
     env_file:
       - ./telemedicine-service/.env
+    volumes:
+      - ./telemedicine-service:/app
+      - /app/node_modules
+    command: npx nodemon server.js
     networks:
       - medilink-network
+    depends_on:
+      - auth-service
 
   notification-service:
     build:
       context: ./notification-service
     container_name: medilink-notification
     ports:
-      - "5005:5005"
+      - "5003:5003"
     environment:
-      - PORT=5005
+      - PORT=5003
+      - NODE_ENV=development
     env_file:
       - ./notification-service/.env
+    volumes:
+      - ./notification-service:/app
+      - /app/node_modules
+    command: npx nodemon server.js
     networks:
       - medilink-network
+
+  payment-service:
+    build:
+      context: ./payment-service
+    container_name: medilink-payment
+    ports:
+      - "3005:3005"
+    environment:
+      - PORT=3005
+      - APPOINTMENT_SERVICE_URL=http://appointment-service:5002
+      - JWT_SECRET=${JWT_SECRET:-secret123}
+      - NODE_ENV=development
+    env_file:
+      - ./payment-service/.env
+    volumes:
+      - ./payment-service:/app
+      - /app/node_modules
+    command: npx nodemon server.js
+    networks:
+      - medilink-network
+    depends_on:
+      - appointment-service
+      - auth-service
 
   patient-service:
     build:
       context: ./patient-service
     container_name: medilink-patient
     ports:
-      - "3000:3000"
+      - "3001:3001"
     environment:
-      - PORT=3000
-      - CLOUDINARY_URL=cloudinary://334213839224793:6Vs2LWGTMoQ3tA87qcR7JovBs9k@dnjq7l123
+      - PORT=3001
+      - CLIENT_URL=http://localhost:5173
+      - NODE_ENV=development
     env_file:
       - ./patient-service/.env
-    networks:
-      - medilink-network
-
-  client:
-    build:
-      context: ./client
-    container_name: medilink-client
-    ports:
-      - "5173:5173"
+    volumes:
+      - ./patient-service:/app
+      - /app/node_modules
+    command: npx nodemon server.js
     networks:
       - medilink-network
     depends_on:
       - auth-service
-      - ai-symptom-service
-      - appointment-service
-      - doctor-service
-      - telemedicine-service
-      - patient-service
-      - notification-service
+
+  client:
+    build:
+      context: ./client
+      args:
+        - VITE_API_URL=http://localhost:5001
+    container_name: medilink-client
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - medilink-network
+    depends_on:
+      - api-gateway
 
 networks:
   medilink-network:

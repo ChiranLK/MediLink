@@ -24,20 +24,20 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', message: 'Patient service is running' });
 });
 
-// Use patient routes
-app.use('/api/patients', patientRoutes);
+// Use patient routes (router already defines /patients/* paths)
+app.use('/', patientRoutes);
 
 // Use upload routes
-app.use('/api/upload', uploadRoutes);
+app.use('/upload', uploadRoutes);
 
 // Use report routes
-app.use('/api/reports', reportRoutes);
+app.use('/reports', reportRoutes);
 
 // Use prescription routes
-app.use('/api/prescriptions', prescriptionRoutes);
+app.use('/prescriptions', prescriptionRoutes);
 
 // Use video consultation routes
-app.use('/api/video-consultation', videoConsultationRoutes);
+app.use('/video-consultation', videoConsultationRoutes);
 
 // Use medical history routes
 app.use('/', medicalHistoryRoutes);

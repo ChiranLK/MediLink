@@ -7,6 +7,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 // Create Stripe Checkout Session
 export const createCheckoutSession = async (
   amount,
+  currency = 'lkr',
   paymentType,
   referenceId,
   metadata = {},
@@ -20,7 +21,7 @@ export const createCheckoutSession = async (
       line_items: [
         {
           price_data: {
-            currency: 'usd',
+            currency: currency,
             product_data: {
               name: `${paymentType.charAt(0).toUpperCase() + paymentType.slice(1)} Payment`,
               description: metadata.description || `Payment for ${paymentType}`,

@@ -18,9 +18,17 @@ function Hero() {
   useEffect(() => {
     const getCurrentUser = async () => {
       try {
-        const { data } = await customFetch.get("/users/current-user");
-        setCurrentUser(data.user);
-      } catch {
+        // Only try to fetch if we have a token
+        const token = sessionStorage.getItem("token");
+        if (!token) {
+          setCurrentUser(null);
+          return;
+        }
+        
+        const { data } = await customFetch.get("/api/users/current-user");
+        setCurrentUser(data.user || data);
+      } catch (error) {
+        // If 401 or any other error, just set to null
         setCurrentUser(null);
       }
     };

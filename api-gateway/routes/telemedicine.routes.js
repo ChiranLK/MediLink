@@ -5,9 +5,8 @@ const router = Router();
 
 router.use(
   createProxyMiddleware({
-    target: process.env.PAYMENT_SERVICE,
+    target: process.env.TELEMEDICINE_SERVICE,
     changeOrigin: true,
-    pathRewrite: { "^/": "/payments/" },
   })
 );
 

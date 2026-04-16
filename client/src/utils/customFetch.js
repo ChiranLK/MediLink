@@ -1,17 +1,11 @@
 import axios from "axios";
 
-// Static mapping for production-like builds so the browser can reach backends directly over localhost
-const getServiceBaseURL = (path) => {
-  if (path.includes("/api/auth")) return "http://localhost:5000";
-  if (path.includes("/api/appointments")) return "http://localhost:3002";
-  if (path.includes("/api/consultations")) return "http://localhost:4000";   // telemedicine-service
-  if (path.includes("/api/doctors") || path.includes("/api/availability") || path.includes("/api/prescriptions")) return "http://localhost:3003";
-  if (path.includes("/api/patients") || path.includes("/api/upload") || path.includes("/api/reports")) return "http://localhost:3000";
-  return "http://localhost:5000"; // Fallback
-};
+// All requests go through API Gateway on port 5001 (Docker mapping: 5001:5000)
+const API_GATEWAY_URL = "http://localhost:5001";
 
-
-const customFetch = axios.create();
+const customFetch = axios.create({
+  baseURL: API_GATEWAY_URL,
+});
 
 // Add request interceptor to include token
 customFetch.interceptors.request.use(
@@ -20,12 +14,6 @@ customFetch.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-
-    // Determine the absolute URL since we are running a built static frontend
-    if (config.url && config.url.startsWith("/api")) {
-      config.baseURL = getServiceBaseURL(config.url);
-    }
-
     return config;
   },
   (error) => {
@@ -38,10 +26,13 @@ customFetch.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      alert("401 Unauthorized captured! URL: " + error.config?.url);
-      // Clear token and redirect to signin if unauthorized
-      sessionStorage.removeItem("token");
-      window.location.href = "/signin";
+      // Only redirect if user was actually on a protected page (not on sign-in page)
+      const currentPath = window.location.pathname;
+      if (!currentPath.includes('/signin') && !currentPath.includes('/signup') && sessionStorage.getItem('token')) {
+        // Clear token and redirect to signin if unauthorized on a protected page
+        sessionStorage.removeItem("token");
+        window.location.href = "/signin";
+      }
     }
     return Promise.reject(error);
   }
