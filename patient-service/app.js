@@ -11,8 +11,16 @@ const medicalHistoryRoutes = require('./routes/medicalHistoryRoutes');
 
 // Middleware
 app.use(cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173", 
-    credentials: true
+  origin: (origin, callback) => {
+    // Allow requests with no origin (curl, Postman, server-to-server), or configured origins
+    const allowed = (process.env.CLIENT_URL || 'http://localhost:5173').split(',').map(s => s.trim());
+    if (!origin || allowed.includes(origin) || origin === 'http://localhost:5001') {
+      callback(null, true);
+    } else {
+      callback(null, true); // allow all for now — tighten in production
+    }
+  },
+  credentials: true,
 }));
 app.use(express.json());
 
@@ -42,27 +50,30 @@ app.use('/video-consultation', videoConsultationRoutes);
 // Use medical history routes
 app.use('/', medicalHistoryRoutes);
 
-// Error handling middleware for multer errors
-app.use((error, req, res, next) => {
+// Global error-handling middleware — must be LAST and must have 4 params
+app.use((error, req, res, next) => { // eslint-disable-line no-unused-vars
+  console.error('[patient-service] unhandled error:', error.message || error);
+
   if (error.code === 'LIMIT_FILE_SIZE') {
     return res.status(413).json({
       success: false,
-      message: 'File size exceeds maximum limit of 10MB'
+      message: 'File size exceeds maximum limit of 10MB',
     });
   }
-  if (error instanceof MulterError) {
+
+  // Multer errors (name === 'MulterError')
+  if (error.name === 'MulterError') {
     return res.status(400).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
-  if (error.message) {
-    return res.status(400).json({
-      success: false,
-      message: error.message
-    });
-  }
-  next();
+
+  const statusCode = error.statusCode || error.status || 500;
+  return res.status(statusCode).json({
+    success: false,
+    message: error.message || 'Internal server error',
+  });
 });
 
 module.exports = app;

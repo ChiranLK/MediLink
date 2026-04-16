@@ -1,8 +1,16 @@
 import Appointment from "../models/Appointment.js";
 import { fetchAISuggestions } from "../services/aiSymptomClient.js";
+import { fetchDoctorById } from "../services/doctorService.js";
 import { StatusCodes } from "http-status-codes";
 import { NotFoundError, BadRequestError } from "../errors/customErrors.js";
 
+/** Display label for UI (matches patient portal "Dr. …" convention) */
+const formatDoctorDisplayName = (name) => {
+  if (!name || typeof name !== "string") return "";
+  const t = name.trim();
+  if (!t) return "";
+  return /^dr\.?\s/i.test(t) ? t : `Dr. ${t}`;
+};
 
 // Error handler wrapper for async functions
 const asyncHandler = (fn) => (req, res, next) => {
@@ -45,6 +53,16 @@ export const bookAppointment = asyncHandler(async (req, res) => {
     req.body.preMedicationSteps = [];
   }
 
+  if (!req.body.doctorName) {
+    try {
+      const { doctor } = await fetchDoctorById(String(doctorId));
+      const label = formatDoctorDisplayName(doctor?.name);
+      if (label) req.body.doctorName = label;
+    } catch (docErr) {
+      console.warn("Could not resolve doctor name:", docErr.message);
+    }
+  }
+
   try {
     const appointment = await Appointment.create(req.body);
 
@@ -79,10 +97,37 @@ export const getMyAppointments = asyncHandler(async (req, res) => {
   const appointments = await Appointment.find({ patientId: req.user.userId })
     .sort("-appointmentDate")
     .lean();
-  
-  res.status(StatusCodes.OK).json({ 
-    appointments,
-    count: appointments.length 
+
+  const missingNameIds = [
+    ...new Set(
+      appointments
+        .filter((a) => a.doctorId && !(a.doctorName && String(a.doctorName).trim()))
+        .map((a) => String(a.doctorId))
+    ),
+  ];
+
+  const nameByDoctorId = new Map();
+  await Promise.all(
+    missingNameIds.map(async (id) => {
+      try {
+        const { doctor } = await fetchDoctorById(id);
+        const label = formatDoctorDisplayName(doctor?.name);
+        if (label) nameByDoctorId.set(id, label);
+      } catch {
+        /* leave unset — UI shows Dr. Unknown */
+      }
+    })
+  );
+
+  const enriched = appointments.map((a) => {
+    const id = a.doctorId != null ? String(a.doctorId) : "";
+    const resolved = (a.doctorName && String(a.doctorName).trim()) || (id && nameByDoctorId.get(id)) || "";
+    return { ...a, doctorName: resolved };
+  });
+
+  res.status(StatusCodes.OK).json({
+    appointments: enriched,
+    count: enriched.length,
   });
 });
 

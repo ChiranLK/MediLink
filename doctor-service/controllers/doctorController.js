@@ -174,12 +174,37 @@ export const getDoctorById = async (req, res, next) => {
 
 
 // @desc    Get doctor profile by auth-service userId
-// @route   GET /api/doctors/user/:userId
+// @route   GET /api/doctors/user/:userId?email=doctor@example.com
 // @access  Private (doctor/admin)
 export const getDoctorByUserId = async (req, res, next) => {
   try {
     const { userId } = req.params;
-    const doctor = await Doctor.findOne({ userId });
+    const { email } = req.query; // optional fallback
+
+    // Primary: find by userId
+    let doctor = await Doctor.findOne({ userId });
+
+    // Fallback 1: find by email if provided (handles doctors whose auth email matches)
+    if (!doctor && email) {
+      doctor = await Doctor.findOne({ email: email.trim().toLowerCase() });
+      if (doctor && !doctor.userId) {
+        doctor.userId = userId;
+        await doctor.save();
+      }
+    }
+
+    // Fallback 2: find by name if provided (for profiles seeded with different emails)
+    const { name } = req.query;
+    if (!doctor && name) {
+      const nameTrimmed = name.trim();
+      doctor = await Doctor.findOne({
+        name: { $regex: new RegExp(`^${nameTrimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+      });
+      if (doctor && !doctor.userId) {
+        doctor.userId = userId;
+        await doctor.save();
+      }
+    }
 
     if (!doctor) {
       return res.status(StatusCodes.NOT_FOUND).json({

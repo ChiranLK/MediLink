@@ -17,10 +17,13 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { PatientAuthProvider } from '../patient/context/PatientAuthContext';
 import Logo from '../components/UI/Logo';
+import { useTheme } from '../context/ThemeContext';
+import { Sun, Moon } from 'lucide-react';
 
 const PatientLayout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   const handleLogout = async () => {
     await logout();
@@ -42,7 +45,7 @@ const PatientLayout = () => {
   return (
     <div className="min-h-screen bg-[#F4F7F9] font-inter">
       {/* Top Navbar */}
-      <header className="bg-white px-6 h-16 flex items-center justify-between border-b border-gray-100 sticky top-0 z-50">
+      <header className="bg-white dark:bg-slate-950 px-6 h-16 flex items-center justify-between border-b border-gray-100 dark:border-slate-900 sticky top-0 z-50">
         <div className="flex items-center gap-10">
           {/* Logo brand */}
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
@@ -60,9 +63,12 @@ const PatientLayout = () => {
         </div>
 
         {/* Top Right Actions */}
-        <div className="flex items-center gap-5 text-gray-500 bg-white">
-          <button className="hover:text-[#055153] transition-colors"><Bell size={20} /></button>
-          <button className="hover:text-[#055153] transition-colors"><Settings size={20} /></button>
+        <div className="flex items-center gap-5 text-gray-500 bg-white dark:bg-transparent">
+          <button onClick={toggleTheme} className="hover:text-[#055153] dark:text-slate-300 dark:hover:text-teal-400 transition-colors" title="Toggle theme">
+            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+          <button className="hover:text-[#055153] dark:text-slate-300 dark:hover:text-teal-400 transition-colors"><Bell size={20} /></button>
+          <button className="hover:text-[#055153] dark:text-slate-300 dark:hover:text-teal-400 transition-colors"><Settings size={20} /></button>
           <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden border border-gray-300">
             {user?.avatar ? (
               <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />

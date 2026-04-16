@@ -7,6 +7,9 @@ const reportController = require('../controllers/reportController');
  * Report routes
  */
 
+// Create report after file upload (e.g. Cloudinary) — JSON body
+router.post('/', reportController.createReport);
+
 // Upload file and create report for a patient
 router.post('/upload/:patientId', upload.single('file'), reportController.uploadAndCreateReport);
 

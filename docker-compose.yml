@@ -76,6 +76,7 @@ services:
     environment:
       - PORT=5002
       - AUTH_SERVICE_URL=http://auth-service:5000
+      - DOCTOR_SERVICE_URL=http://doctor-service:3003
       - JWT_SECRET=${JWT_SECRET:-secret123}
       - NODE_ENV=development
     env_file:
@@ -185,6 +186,8 @@ services:
     environment:
       - PORT=3001
       - CLIENT_URL=http://localhost:5173
+      - PATIENT_PUBLIC_URL=http://localhost:3001
+      - SKIP_CLOUDINARY=true
       - NODE_ENV=development
     env_file:
       - ./patient-service/.env

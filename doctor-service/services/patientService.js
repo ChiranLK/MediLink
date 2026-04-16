@@ -12,7 +12,7 @@ import axios from 'axios';
  */
 
 const PATIENT_SERVICE_URL =
-  process.env.PATIENT_SERVICE_URL || 'http://localhost:3000';
+  process.env.PATIENT_SERVICE_URL || 'http://localhost:3001';
 
 /**
  * Fetch all reports uploaded by a patient.
@@ -28,7 +28,7 @@ export const fetchPatientReports = async (patientId, authToken = null) => {
     }
 
     const response = await axios.get(
-      `${PATIENT_SERVICE_URL}/api/reports/patient/${patientId}`,
+      `${PATIENT_SERVICE_URL}/reports/patient/${patientId}`,
       config
     );
 

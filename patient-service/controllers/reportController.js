@@ -1,50 +1,78 @@
+const mongoose = require('mongoose');
 const PatientReport = require('../models/PatientReport');
 const Patient = require('../models/Patient');
 const fs = require('fs');
 const path = require('path');
 
 /**
+ * Resolve Patient from Mongo _id or auth userId (24-char hex).
+ */
+async function resolvePatient(idParam) {
+  if (idParam === undefined || idParam === null || String(idParam).trim() === '') return null;
+  const raw = String(idParam).trim();
+  if (!mongoose.Types.ObjectId.isValid(raw)) return null;
+  let patient = await Patient.findById(raw);
+  if (patient) return patient;
+  patient = await Patient.findOne({ userId: raw });
+  return patient;
+}
+
+/**
  * Create a new patient report
  * @route POST /api/reports
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
+ * Accepts patientId as a MongoDB Patient _id OR as the auth-service userId (the lookup
+ * tries both). If no patient profile exists yet the report is stored with the raw id
+ * so the patient can link it after completing their profile.
  */
 exports.createReport = async (req, res) => {
   try {
-    const { patientId, fileUrl, description, reportType, fileSize } = req.body;
+    const { fileUrl, description, reportType, fileSize } = req.body;
+    // Accept patientId from body OR from the gateway-forwarded header
+    const patientId =
+      req.body.patientId ||
+      req.headers['x-user-id'] ||
+      null;
 
-    // Validate required fields
-    if (!patientId || !fileUrl || !description) {
+    if (!fileUrl || !description) {
       return res.status(400).json({
         success: false,
-        message: 'Required fields: patientId, fileUrl, description'
+        message: 'Required fields: fileUrl, description',
       });
     }
 
-    // Validate patientId format
-    if (!patientId.match(/^[0-9a-fA-F]{24}$/)) {
+    if (!patientId) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid patient ID format'
+        message: 'Required field: patientId (send in body or via Authorization header)',
       });
     }
 
-    // Check if patient exists
-    const patient = await Patient.findById(patientId);
-    if (!patient) {
-      return res.status(404).json({
+    // Try to resolve to a Patient document; fall back to raw id so reports
+    // are never silently dropped when the patient has not yet completed their profile.
+    let resolvedPatientId;
+    const patient = await resolvePatient(patientId);
+    if (patient) {
+      resolvedPatientId = patient._id;
+    } else if (mongoose.Types.ObjectId.isValid(String(patientId).trim())) {
+      // No profile yet — store with the provided id
+      resolvedPatientId = new mongoose.Types.ObjectId(String(patientId).trim());
+    } else {
+      return res.status(400).json({
         success: false,
-        message: 'Patient not found'
+        message: 'patientId is not a valid id',
       });
     }
 
-    // Create new report
+    const { doctorId, doctorName } = req.body;
+
     const report = new PatientReport({
-      patientId,
+      patientId: resolvedPatientId,
+      doctorId: doctorId || null,
+      doctorName: doctorName || null,
       fileUrl,
       description,
       reportType: reportType || 'Other',
-      fileSize: fileSize || 0
+      fileSize: fileSize || 0,
     });
 
     const savedReport = await report.save();
@@ -52,14 +80,14 @@ exports.createReport = async (req, res) => {
     res.status(201).json({
       success: true,
       message: 'Report created successfully',
-      data: savedReport
+      data: savedReport,
     });
   } catch (error) {
     console.error('Error creating report:', error);
     res.status(500).json({
       success: false,
       message: 'Error creating report',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -345,42 +373,47 @@ exports.getPatientReports = async (req, res) => {
   try {
     const { patientId } = req.params;
 
-    // Validate if patientId is a valid MongoDB ObjectId
-    if (!patientId.match(/^[0-9a-fA-F]{24}$/)) {
+    if (!patientId || !mongoose.Types.ObjectId.isValid(String(patientId).trim())) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid patient ID format'
+        message: 'Invalid patient ID format',
       });
     }
 
-    // Check if patient exists
-    const patient = await Patient.findById(patientId);
-    if (!patient) {
-      return res.status(404).json({
-        success: false,
-        message: 'Patient not found'
-      });
+    const raw = String(patientId).trim();
+
+    // Try to resolve the Patient document to get the canonical _id.
+    // If no profile exists yet, query by the raw id directly so reports
+    // stored before profile creation are still returned.
+    let query;
+    const patient = await resolvePatient(raw);
+    if (patient) {
+      query = { patientId: patient._id };
+    } else {
+      query = {
+        $or: [
+          { patientId: new mongoose.Types.ObjectId(raw) },
+        ],
+      };
     }
 
-    const reports = await PatientReport.find({ patientId }).sort({ createdAt: -1 });
+    const reports = await PatientReport.find(query).sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
       message: 'Reports retrieved successfully',
-      patientInfo: {
-        patientId: patient._id,
-        name: patient.name,
-        userId: patient.userId
-      },
+      patientInfo: patient
+        ? { patientId: patient._id, name: patient.name, userId: patient.userId }
+        : { patientId: raw },
       data: reports,
-      count: reports.length
+      count: reports.length,
     });
   } catch (error) {
     console.error('Error fetching patient reports:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching patient reports',
-      error: error.message
+      error: error.message,
     });
   }
 };

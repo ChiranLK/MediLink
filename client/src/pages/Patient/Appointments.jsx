@@ -154,59 +154,46 @@ const PatientAppointments = () => {
 
   return (
     <div className="w-full max-w-6xl mx-auto p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-bold text-gray-800">My Appointments</h1>
-        <button
-          onClick={() => setShowBookingModal(true)}
-          className="flex items-center gap-2 bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition font-semibold"
-        >
-          <Calendar size={20} />
-          Book Appointment
-        </button>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex gap-2 mb-8 border-b border-gray-200">
-        {[
-          { id: 'upcoming', label: 'Upcoming' },
-          { id: 'past', label: 'Past' },
-          { id: 'cancelled', label: 'Cancelled' },
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-6 py-3 font-semibold border-b-2 transition ${
-              activeTab === tab.id
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Search */}
-      <div className="mb-6">
+      {/* Tabs + Search */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div className="flex gap-1">
+          {[
+            { id: 'upcoming', label: 'Upcoming' },
+            { id: 'past', label: 'Past' },
+            { id: 'cancelled', label: 'Cancelled' },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                activeTab === tab.id
+                  ? 'bg-[#055153] text-white shadow-lg shadow-teal-900/10'
+                  : 'text-gray-500 hover:bg-gray-100'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
         <div className="relative">
-          <Search className="absolute left-3 top-3 text-gray-400" size={20} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
           <input
             type="text"
             placeholder="Search by doctor name or specialization..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            className="pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#055153] focus:border-transparent outline-none w-full sm:w-72 bg-white"
+            style={{ color: '#1e293b' }}
           />
         </div>
       </div>
 
       {/* Appointments List */}
       {filteredAppointments.length === 0 ? (
-        <div className="text-center py-12">
+        <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
           <Calendar size={48} className="mx-auto text-gray-300 mb-4" />
-          <h3 className="text-xl font-semibold text-gray-600 mb-2">No appointments</h3>
-          <p className="text-gray-500">
+          <h3 className="text-lg font-bold mb-1" style={{ color: '#475569' }}>No appointments</h3>
+          <p className="text-sm" style={{ color: '#94a3b8' }}>
             {activeTab === 'upcoming' ? 'Book your first appointment to get started.' : `No ${activeTab} appointments.`}
           </p>
         </div>
@@ -215,45 +202,45 @@ const PatientAppointments = () => {
           {filteredAppointments.map(appointment => (
             <div
               key={appointment._id}
-              className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition"
+              className="bg-white rounded-2xl border border-gray-100 p-6 hover:border-[#055153]/20 hover:shadow-md transition-all"
             >
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                  <h3 className="text-lg font-bold mb-2" style={{ color: '#112429' }}>
                     {appointment.doctorName || 'Dr. Unknown'}
                   </h3>
-                  <div className="flex flex-wrap gap-4 text-gray-600">
+                  <div className="flex flex-wrap gap-4">
                     <div className="flex items-center gap-2">
-                      <Stethoscope size={18} className="text-blue-500" />
-                      <span>{appointment.specialization || appointment.recommendedSpecialty || 'General'}</span>
+                      <Stethoscope size={16} className="text-[#055153]" />
+                      <span className="text-sm font-medium" style={{ color: '#475569' }}>{appointment.specialization || appointment.recommendedSpecialty || 'General'}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Calendar size={18} className="text-green-500" />
-                      <span>{format(new Date(appointment.appointmentDate), 'MMM dd, yyyy')}</span>
+                      <Calendar size={16} className="text-[#0E8A7F]" />
+                      <span className="text-sm font-medium" style={{ color: '#475569' }}>{format(new Date(appointment.appointmentDate), 'MMM dd, yyyy')}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Clock size={18} className="text-orange-500" />
-                      <span>{format(new Date(appointment.appointmentDate), 'hh:mm a')}</span>
+                      <Clock size={16} className="text-amber-500" />
+                      <span className="text-sm font-medium" style={{ color: '#475569' }}>{format(new Date(appointment.appointmentDate), 'hh:mm a')}</span>
                     </div>
                   </div>
                 </div>
-                <span className={`px-4 py-1 rounded-full text-sm font-semibold ${getStatusColor(appointment.status)}`}>
+                <span className={`px-4 py-1.5 rounded-full text-xs font-bold ${getStatusColor(appointment.status)}`}>
                   {appointment.status}
                 </span>
               </div>
 
               {appointment.symptoms && (
-                <div className="bg-gray-50 p-4 rounded mb-4">
-                  <p className="text-sm text-gray-600">
-                    <strong>Symptoms/Reason:</strong> {appointment.symptoms}
+                <div className="bg-[#F8FAFC] p-4 rounded-xl mb-4">
+                  <p className="text-sm" style={{ color: '#475569' }}>
+                    <strong style={{ color: '#1e293b' }}>Symptoms/Reason:</strong> {appointment.symptoms}
                   </p>
                 </div>
               )}
 
               {appointment.aiSuggestions && (
-                <div className="bg-blue-50 p-4 rounded mb-4 border-l-4 border-blue-500">
-                  <p className="text-sm text-gray-700">
-                    <strong>AI Analysis:</strong> {appointment.aiSuggestions}
+                <div className="bg-[#F2FDFE] p-4 rounded-xl mb-4 border-l-4 border-[#055153]">
+                  <p className="text-sm" style={{ color: '#475569' }}>
+                    <strong style={{ color: '#055153' }}>AI Analysis:</strong> {appointment.aiSuggestions}
                   </p>
                 </div>
               )}
@@ -261,7 +248,7 @@ const PatientAppointments = () => {
               {activeTab === 'upcoming' && appointment.status !== 'Cancelled' && (
                 <button
                   onClick={() => handleCancelAppointment(appointment._id)}
-                  className="text-red-500 hover:text-red-700 font-semibold text-sm transition"
+                  className="text-red-500 hover:text-red-700 font-semibold text-xs transition mt-1"
                 >
                   Cancel Appointment
                 </button>
@@ -273,18 +260,18 @@ const PatientAppointments = () => {
 
       {/* Booking Modal */}
       {showBookingModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Book Appointment</h2>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowBookingModal(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8" onClick={e => e.stopPropagation()}>
+            <h2 className="text-xl font-extrabold mb-6" style={{ color: '#112429' }}>Book Appointment</h2>
 
-            <form onSubmit={handleBookAppointment} className="space-y-4">
-              {/* Doctor Selection */}
+            <form onSubmit={handleBookAppointment} className="space-y-5">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Select Doctor *</label>
+                <label className="block text-[11px] font-bold tracking-widest uppercase mb-2" style={{ color: '#64748b' }}>Select Doctor *</label>
                 <select
                   value={bookingForm.doctorId}
                   onChange={(e) => setBookingForm({ ...bookingForm, doctorId: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full px-4 py-3 bg-[#F8FAFC] border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#055153] outline-none font-medium"
+                  style={{ color: '#1e293b' }}
                   required
                 >
                   <option value="">Choose a doctor...</option>
@@ -296,57 +283,57 @@ const PatientAppointments = () => {
                 </select>
               </div>
 
-              {/* Date */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Date *</label>
+                <label className="block text-[11px] font-bold tracking-widest uppercase mb-2" style={{ color: '#64748b' }}>Date *</label>
                 <input
                   type="date"
                   value={bookingForm.appointmentDate}
                   onChange={(e) => setBookingForm({ ...bookingForm, appointmentDate: e.target.value })}
                   min={format(new Date(), 'yyyy-MM-dd')}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full px-4 py-3 bg-[#F8FAFC] border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#055153] outline-none font-medium"
+                  style={{ color: '#1e293b' }}
                   required
                 />
               </div>
 
-              {/* Time */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Time *</label>
+                <label className="block text-[11px] font-bold tracking-widest uppercase mb-2" style={{ color: '#64748b' }}>Time *</label>
                 <input
                   type="time"
                   value={bookingForm.appointmentTime}
                   onChange={(e) => setBookingForm({ ...bookingForm, appointmentTime: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full px-4 py-3 bg-[#F8FAFC] border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#055153] outline-none font-medium"
+                  style={{ color: '#1e293b' }}
                   required
                 />
               </div>
 
-              {/* Symptoms */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Symptoms/Reason for Visit *</label>
+                <label className="block text-[11px] font-bold tracking-widest uppercase mb-2" style={{ color: '#64748b' }}>Symptoms / Reason *</label>
                 <textarea
                   value={bookingForm.symptoms}
                   onChange={(e) => setBookingForm({ ...bookingForm, symptoms: e.target.value })}
                   placeholder="Describe your symptoms or reason for the appointment..."
                   rows="3"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full px-4 py-3 bg-[#F8FAFC] border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#055153] outline-none font-medium resize-none placeholder:text-gray-400"
+                  style={{ color: '#1e293b' }}
                   required
                 />
               </div>
 
-              {/* Buttons */}
-              <div className="flex gap-4 justify-end pt-4">
+              <div className="flex gap-3 justify-end pt-2">
                 <button
                   type="button"
                   onClick={() => setShowBookingModal(false)}
-                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold"
+                  className="px-5 py-2.5 border-2 border-gray-200 rounded-xl font-semibold text-sm hover:bg-gray-50 transition"
+                  style={{ color: '#475569' }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition font-semibold"
+                  className="px-5 py-2.5 bg-[#055153] hover:bg-[#044143] text-white rounded-xl font-semibold text-sm disabled:opacity-50 transition-all shadow-lg shadow-teal-900/10"
                 >
                   {isSubmitting ? 'Booking...' : 'Book Now'}
                 </button>

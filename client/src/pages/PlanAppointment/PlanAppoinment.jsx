@@ -59,7 +59,7 @@ function PlanAppointment() {
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        const { data } = await customFetch.get('/api/doctors');
+        const { data } = await customFetch.get('/api/doctor');
         const docs = data.data || [];
         setDoctors(docs);
 
@@ -202,7 +202,7 @@ function PlanAppointment() {
 
       // ── STEP C: Create Stripe Checkout Session (payment-service on :3005) ──
       try {
-        const paymentRes = await customFetch.post('/api/payments/checkout', {
+        const paymentRes = await customFetch.post('/api/payment/checkout', {
           amount: totalAmount,
           currency: 'lkr',
           paymentType: 'appointment',

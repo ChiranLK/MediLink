@@ -1,25 +1,31 @@
 import React from 'react';
 import { FileText, Users, CalendarCheck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const QuickShortcuts = () => {
+  const navigate = useNavigate();
+
   const shortcuts = [
     {
       id: 1,
       label: 'Add Prescription',
       icon: FileText,
-      primary: true
+      primary: true,
+      to: '/doctor/patients',
     },
     {
       id: 2,
       label: 'View Patient Registry',
       icon: Users,
-      primary: false
+      primary: false,
+      to: '/doctor/patients',
     },
     {
       id: 3,
       label: 'Set Availability',
       icon: CalendarCheck,
-      primary: false
+      primary: false,
+      to: '/doctor/availability',
     }
   ];
 
@@ -30,6 +36,7 @@ const QuickShortcuts = () => {
         {shortcuts.map((shortcut) => (
           <button 
             key={shortcut.id}
+            onClick={() => navigate(shortcut.to)}
             className={`w-full flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-200 group ${
               shortcut.primary 
                 ? 'bg-[#055153] dark:bg-teal-600 text-white hover:bg-[#044143] dark:hover:bg-teal-500 shadow-md shadow-[#055153]/20 dark:shadow-black/20' 

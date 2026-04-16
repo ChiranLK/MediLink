@@ -30,16 +30,12 @@ export const patientApi = {
 
   // ========== REPORTS & UPLOADS ==========
   async uploadReport(formData) {
-    const { data } = await customFetch.post(`${ENDPOINTS.upload}/single`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    const { data } = await customFetch.post(`${ENDPOINTS.upload}/single`, formData);
     return data;
   },
 
   async uploadMultipleReports(formData) {
-    const { data } = await customFetch.post(`${ENDPOINTS.upload}/multiple`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    const { data } = await customFetch.post(`${ENDPOINTS.upload}/multiple`, formData);
     return data;
   },
 
@@ -70,6 +66,14 @@ export const patientApi = {
 
   async deleteReport(reportId) {
     const { data } = await customFetch.delete(`${ENDPOINTS.reports}/${reportId}`);
+    return data;
+  },
+
+  /** Reports uploaded by patients who have appointments with this doctor */
+  async getIncomingReportsForDoctor(doctorId) {
+    const { data } = await customFetch.get(
+      `${ENDPOINTS.doctors}/incoming-patient-reports/${doctorId}`
+    );
     return data;
   },
 
@@ -132,7 +136,7 @@ export const patientApi = {
   },
 
   async getDoctorAvailability(doctorId) {
-    const { data } = await customFetch.get(`/api/doctor/availability/${doctorId}`);
+    const { data } = await customFetch.get(`/api/availability/${doctorId}`);
     return data;
   },
 

@@ -1,11 +1,13 @@
 import React from 'react';
-import { Search, Bell, Settings, HelpCircle, Menu } from 'lucide-react';
+import { Bell, Settings, HelpCircle, Menu, Sun, Moon } from 'lucide-react';
 import { useDoctorContext } from '../../context/DoctorContext';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
 const TopHeader = () => {
   const { doctorProfile, toggleSidebar } = useDoctorContext();
   const { user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   const doctorName = doctorProfile?.name || user?.name || user?.fullName || 'Doctor';
   const specialization = doctorProfile?.specialization || 'General Practice';
@@ -23,26 +25,20 @@ const TopHeader = () => {
         >
           <Menu size={24} />
         </button>
-
-
-
-        {/* Search Bar */}
-        <div className="relative w-64 md:w-96 group hidden sm:block">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <Search size={18} className="text-slate-400 group-focus-within:text-[#055153] dark:group-focus-within:text-teal-400 transition-colors" />
-          </div>
-          <input
-            type="text"
-            placeholder="Search patients, reports..."
-            className="w-full pl-11 pr-4 py-2.5 bg-[#F8FAFB] dark:bg-slate-900 border-transparent focus:border-[#055153]/20 dark:focus:border-teal-400/20 focus:bg-white dark:focus:bg-slate-900/80 focus:ring-4 focus:ring-[#055153]/5 dark:focus:ring-teal-400/5 rounded-2xl text-sm font-medium text-slate-700 dark:text-slate-200 placeholder-slate-400 transition-all font-inter"
-          />
-        </div>
       </div>
 
       {/* Right Section */}
       <div className="flex items-center gap-3 md:gap-6">
         {/* Action Icons */}
         <div className="flex items-center gap-1 md:gap-4">
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="p-2 text-slate-700 dark:text-slate-300 hover:text-[#055153] dark:hover:text-teal-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors rounded-full"
+            title="Toggle theme"
+          >
+            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
           <button className="relative p-2 text-slate-700 dark:text-slate-300 hover:text-[#055153] dark:hover:text-teal-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors rounded-full">
             <Bell size={22} strokeWidth={2.5} />
             <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 border-2 border-white dark:border-slate-950 rounded-full"></span>

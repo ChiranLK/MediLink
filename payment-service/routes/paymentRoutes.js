@@ -13,6 +13,9 @@ router.post('/checkout', paymentController.createCheckoutSession);
 // Verify checkout session completion
 router.post('/verify-checkout', paymentController.verifyCheckoutSession);
 
+// Doctor dashboard: completed payments this month (metadata.doctorId)
+router.get('/doctor/summary', paymentController.getDoctorPaymentSummary);
+
 // Get all payments for user
 router.get('/', paymentController.getUserPayments);
 

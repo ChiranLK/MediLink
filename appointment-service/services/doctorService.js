@@ -74,12 +74,12 @@ export const fetchDoctorsBySpecialty = async (specialty, options = {}) => {
     );
 
     console.log(
-      `[DoctorService] Fetching doctors for specialty: ${specialty} from ${DOCTOR_SERVICE_URL}/api/doctors/specialty/${specialty}`
+      `[DoctorService] Fetching doctors for specialty: ${specialty} from ${DOCTOR_SERVICE_URL}/specialty/${specialty}`
     );
 
-    // Call Doctor service endpoint
+    // Doctor service mounts routes at / (not /api/doctors)
     const response = await doctorServiceClient.get(
-      `/api/doctors/specialty/${encodeURIComponent(specialty)}`,
+      `/specialty/${encodeURIComponent(specialty)}`,
       { params: queryParams }
     );
 
@@ -152,7 +152,7 @@ export const fetchDoctorById = async (doctorId) => {
 
     console.log(`[DoctorService] Fetching doctor by ID: ${doctorId}`);
 
-    const response = await doctorServiceClient.get(`/api/doctors/${doctorId}`);
+    const response = await doctorServiceClient.get(`/${encodeURIComponent(doctorId)}`);
 
     if (!response.data || !response.data.data) {
       throw new Error('Invalid response structure from Doctor service');
@@ -187,7 +187,7 @@ export const fetchDoctorById = async (doctorId) => {
  */
 export const checkDoctorServiceHealth = async () => {
   try {
-    const response = await doctorServiceClient.get('/api/doctors', {
+    const response = await doctorServiceClient.get('/', {
       timeout: 5000,
       params: { limit: 1 },
     });

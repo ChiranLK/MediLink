@@ -43,7 +43,7 @@ export const getDoctorAppointments = async (req, res, next) => {
     if (status) qs.set('status', status);
 
     const response = await axios.get(
-      `${APPOINTMENT_SERVICE_URL}/api/appointments/doctor/${doctorId}?${qs.toString()}`,
+      `${APPOINTMENT_SERVICE_URL}/doctor/${doctorId}?${qs.toString()}`,
       buildConfig(req)
     );
 
@@ -86,7 +86,7 @@ export const acceptAppointment = async (req, res, next) => {
     const { notes } = req.body;
 
     const response = await axios.put(
-      `${APPOINTMENT_SERVICE_URL}/api/appointments/${id}`,
+      `${APPOINTMENT_SERVICE_URL}/${id}`,
       { status: 'Confirmed', doctorNotes: notes || '' },
       buildConfig(req)
     );
@@ -116,7 +116,7 @@ export const rejectAppointment = async (req, res, next) => {
     const { reason } = req.body;
 
     const response = await axios.put(
-      `${APPOINTMENT_SERVICE_URL}/api/appointments/${id}`,
+      `${APPOINTMENT_SERVICE_URL}/${id}`,
       { status: 'Cancelled', cancellationReason: reason || 'Rejected by doctor' },
       buildConfig(req)
     );
@@ -146,7 +146,7 @@ export const completeAppointment = async (req, res, next) => {
     const { notes } = req.body;
 
     const response = await axios.put(
-      `${APPOINTMENT_SERVICE_URL}/api/appointments/${id}`,
+      `${APPOINTMENT_SERVICE_URL}/${id}`,
       { status: 'Completed', doctorNotes: notes || '' },
       buildConfig(req)
     );

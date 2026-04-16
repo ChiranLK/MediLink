@@ -43,6 +43,13 @@ const appointmentSchema = new mongoose.Schema({
         index: true,
     },
 
+    /** Resolved from doctor-service for patient-facing lists (optional for legacy rows) */
+    doctorName: {
+        type: String,
+        trim: true,
+        default: '',
+    },
+
     appointmentDate: {
         type: Date,
         required: true  

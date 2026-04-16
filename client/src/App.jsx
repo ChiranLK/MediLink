@@ -18,7 +18,10 @@ import Dashboard from './pages/Doctor/Dashboard';
 import Availability from './pages/Doctor/Availability';
 import Schedule from './pages/Doctor/Schedule';
 import DoctorProfile from './pages/Doctor/Profile';
+import DoctorReports from './pages/Doctor/Reports';
 import AdminDeletionReview from './pages/Doctor/AdminDeletionReview';
+import DoctorPatients from './pages/Doctor/Patients';
+import Notes from './pages/Doctor/Notes';
 import PatientLayout from './layouts/PatientLayout';
 import PatientDashboard from './pages/Patient/Dashboard';
 import PatientProfile from './pages/Patient/Profile';
@@ -97,7 +100,10 @@ function App() {
                   <Route path="/doctor/dashboard" element={<Dashboard />} />
                   <Route path="/doctor/availability" element={<Availability />} />
                   <Route path="/doctor/schedules" element={<Schedule />} />
+                  <Route path="/doctor/reports" element={<DoctorReports />} />
                   <Route path="/doctor/profile" element={<DoctorProfile />} />
+                  <Route path="/doctor/patients" element={<DoctorPatients />} />
+                  <Route path="/doctor/notes" element={<Notes />} />
                   <Route path="/doctor/admin/deletions" element={<AdminDeletionReview />} />
                 </Route>
               </Route>

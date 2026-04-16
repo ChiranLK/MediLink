@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useDoctorContext } from '../../context/DoctorContext';
@@ -11,24 +11,77 @@ import {
   LogOut,
   Clock,
   UserCog,
-  ShieldAlert
+  ShieldAlert,
+  Loader2
 } from 'lucide-react';
+
+// Removes near-white background from favicon at runtime so it blends nicely
+const ProcessedFavicon = ({ className }) => {
+  const [src, setSrc] = useState('/favicon.png');
+  useEffect(() => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = '/favicon.png';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width; canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const d = imageData.data;
+        for (let i = 0; i < d.length; i += 4) {
+          const r = d[i], g = d[i + 1], b = d[i + 2];
+          // Make near-white fully transparent
+          if (r > 245 && g > 245 && b > 245) {
+            d[i + 3] = 0; // alpha
+          }
+        }
+        ctx.putImageData(imageData, 0, 0);
+        setSrc(canvas.toDataURL('image/png'));
+      } catch (_) {
+        // Fallback to original favicon if canvas fails (e.g., CORS)
+        setSrc('/favicon.png');
+      }
+    };
+  }, []);
+  return <img src={src} alt="MediLink" className={className} />;
+};
 
 const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout, user } = useAuth();
-  const { doctorProfile, isSidebarOpen, toggleSidebar } = useDoctorContext();
+  const { doctorProfile, isSidebarOpen, toggleSidebar, startRouteLoading, stopRouteLoading } = useDoctorContext();
   
   const isAdmin = user?.role === 'admin';
   const currentPath = location.pathname;
 
+  // Clear loading indicator when route actually changes
+  useEffect(() => { stopRouteLoading(); }, [location.pathname]);
+
   const handleLogout = async () => {
-    await logout();
-    navigate('/signin');
+    const confirmed = window.confirm(
+      'Are you sure you want to log out of the doctor portal? You will need to sign in again to continue.'
+    );
+    if (!confirmed) return;
+    try {
+      await logout();
+    } catch (e) {
+      console.warn('Logout handler error:', e);
+    } finally {
+      try {
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user');
+      } catch (_) {}
+      // Use hard redirect to guarantee navigation even if React Router is in a bad state
+      window.location.href = '/signin';
+    }
   };
 
   const handleItemClick = (path) => {
+    if (path === currentPath) return;
+    startRouteLoading();
     navigate(path);
     if (isSidebarOpen) toggleSidebar();
   };
@@ -72,8 +125,8 @@ const Sidebar = () => {
     <div className="w-[260px] h-screen bg-[#F8FAFB] dark:bg-slate-900 flex flex-col pt-6 font-inter border-r border-[#E2E8F0] dark:border-slate-800 transition-colors duration-300">
       {/* Brand Logo */}
       <div className="px-6 mb-10 flex items-center gap-3">
-        <div className="w-10 h-10 bg-[#055153] dark:bg-teal-500 rounded-xl flex items-center justify-center shadow-lg shadow-[#055153]/20 dark:shadow-teal-500/20">
-          <img src="/favicon.png" alt="MediLink" className="w-6 h-6 invert brightness-0" />
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center">
+          <ProcessedFavicon className="w-8 h-8 object-contain" />
         </div>
         <div className="flex flex-col">
           <span className="font-extrabold text-[#055153] dark:text-teal-400 text-[18px] tracking-tight leading-tight uppercase font-manrope">MediLink</span>

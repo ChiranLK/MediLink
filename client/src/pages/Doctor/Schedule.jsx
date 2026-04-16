@@ -172,32 +172,20 @@ const Schedule = () => {
   const filteredAppointments = getFilteredAppointments();
 
   return (
-    <div className="w-full min-h-screen bg-[#F8FAFB] flex flex-col p-6 lg:p-8">
+    <div className="w-full min-h-screen bg-[#F8FAFB] dark:bg-slate-950 flex flex-col p-6 lg:p-8 transition-colors duration-300">
       
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
         <div>
-          <h1 className="text-[26px] xl:text-[30px] font-bold text-[#0D1C2E] mb-1 tracking-tight">Appointment Management</h1>
-          <p className="text-[#64748B] text-[15px]">Review and manage your daily clinical consultation flow.</p>
+          <h1 className="text-[26px] xl:text-[30px] font-bold text-[#0D1C2E] dark:text-white mb-1 tracking-tight">Appointment Management</h1>
+          <p className="text-[#64748B] dark:text-slate-400 text-[15px]">Review and manage your daily clinical consultation flow.</p>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center bg-white p-1 rounded-full shadow-sm border border-slate-200">
-            <button className="px-5 py-2 text-[14px] font-bold rounded-full bg-[#F1F5F9] text-[#0D1C2E] flex items-center gap-2 transition-all">
-              <Filter size={16} /> List View
-            </button>
-            <button className="px-5 py-2 text-[14px] font-bold rounded-full text-slate-500 hover:text-slate-800 flex items-center gap-2 transition-all hover:bg-slate-50">
-              <Calendar size={16} /> Calendar
-            </button>
-          </div>
-          <button className="hidden md:flex items-center gap-2 px-5 py-2.5 bg-[#055153] text-white font-bold rounded-full text-[14px] shadow-sm hover:bg-[#044042] transition-colors">
-            New Appointment
-          </button>
-        </div>
+        {/* List/Calendar toggle and New Appointment button intentionally removed per requirements */}
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-8 border-b border-slate-200 mb-6 overflow-x-auto custom-scrollbar">
+      <div className="flex items-center gap-8 border-b border-slate-200 dark:border-slate-800 mb-6 overflow-x-auto custom-scrollbar">
         {['Upcoming', 'Pending', 'Completed', 'Cancelled'].map((tab) => {
           let label = tab;
           if (tab === 'Upcoming' && counts.Upcoming > 0) label = `Upcoming (${counts.Upcoming})`;
@@ -209,8 +197,8 @@ const Schedule = () => {
               onClick={() => { setActiveTab(tab); setPage(1); }}
               className={`pb-4 px-2 text-[15px] font-bold whitespace-nowrap transition-colors relative ${
                 activeTab === tab 
-                  ? 'text-[#055153]' 
-                  : 'text-slate-500 hover:text-slate-800'
+                  ? 'text-[#055153] dark:text-teal-400' 
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100'
               }`}
             >
               {label}
@@ -225,23 +213,23 @@ const Schedule = () => {
       {/* Action Bar (Search & Filters) */}
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="relative flex-1 max-w-md">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
           <input 
             type="text" 
             placeholder="Search patient name or phone..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl font-medium text-[14px] shadow-sm focus:outline-none focus:border-[#055153] focus:ring-1 focus:ring-[#055153]"
+            className="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl font-medium text-[14px] shadow-sm focus:outline-none focus:border-[#055153] dark:focus:border-teal-500 focus:ring-1 focus:ring-[#055153] dark:focus:ring-teal-500 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
           />
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-white px-4 py-3 border border-slate-200 rounded-xl shadow-sm cursor-pointer hover:bg-slate-50">
-            <Calendar size={18} className="text-[#0D1C2E]" />
-            <span className="font-semibold text-[#0D1C2E] text-[14px]">Today</span>
+          <div className="flex items-center gap-2 bg-white dark:bg-slate-900 px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+            <Calendar size={18} className="text-[#0D1C2E] dark:text-slate-100" />
+            <span className="font-semibold text-[#0D1C2E] dark:text-slate-100 text-[14px]">Today</span>
           </div>
-          <div className="flex items-center gap-2 bg-white px-4 py-3 border border-slate-200 rounded-xl shadow-sm cursor-pointer hover:bg-slate-50">
-            <Filter size={18} className="text-[#0D1C2E]" />
-            <span className="font-semibold text-[#0D1C2E] text-[14px]">All Types</span>
+          <div className="flex items-center gap-2 bg-white dark:bg-slate-900 px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+            <Filter size={18} className="text-[#0D1C2E] dark:text-slate-100" />
+            <span className="font-semibold text-[#0D1C2E] dark:text-slate-100 text-[14px]">All Types</span>
           </div>
         </div>
       </div>
@@ -249,32 +237,32 @@ const Schedule = () => {
       {/* Appointments List */}
       <div className="flex-1 flex flex-col gap-4 relative">
         {loading ? (
-           <div className="absolute inset-0 flex items-center justify-center bg-white/50 z-10 rounded-2xl">
-             <Loader2 className="animate-spin text-[#055153]" size={40} />
+           <div className="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-slate-900/70 z-10 rounded-2xl">
+             <Loader2 className="animate-spin text-[#055153] dark:text-teal-400" size={40} />
            </div>
         ) : filteredAppointments.length === 0 ? (
-           <div className="bg-white rounded-2xl p-12 text-center border border-slate-200 shadow-sm flex-1 flex flex-col items-center justify-center">
-             <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-               <Calendar className="text-slate-400" size={32} />
+           <div className="bg-white dark:bg-slate-900 rounded-2xl p-12 text-center border border-slate-200 dark:border-slate-800 shadow-sm flex-1 flex flex-col items-center justify-center">
+             <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+               <Calendar className="text-slate-400 dark:text-slate-500" size={32} />
              </div>
-             <h3 className="text-[18px] font-bold text-slate-700 mb-1">No appointments found</h3>
-             <p className="text-slate-500">There are no {activeTab.toLowerCase()} appointments right now.</p>
+             <h3 className="text-[18px] font-bold text-slate-700 dark:text-slate-100 mb-1">No appointments found</h3>
+             <p className="text-slate-500 dark:text-slate-400">There are no {activeTab.toLowerCase()} appointments right now.</p>
            </div>
         ) : (
           filteredAppointments.map((apt) => (
-            <div key={apt._id} className="bg-white rounded-[24px] p-5 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.04)] border border-slate-100 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 hover:shadow-md transition-shadow">
+            <div key={apt._id} className="bg-white dark:bg-slate-900 rounded-[24px] p-5 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_-4px_rgba(0,0,0,0.8)] border border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 hover:shadow-md dark:hover:shadow-black/40 transition-shadow">
               
               {/* Profile Details */}
               <div className="flex items-center gap-4 flex-1">
-                <div className="w-14 h-14 rounded-full bg-[#E2E8F0] overflow-hidden shrink-0 flex items-center justify-center text-[#64748B] font-bold text-xl border-2 border-white shadow-sm">
+                <div className="w-14 h-14 rounded-full bg-[#E2E8F0] dark:bg-slate-800 overflow-hidden shrink-0 flex items-center justify-center text-[#64748B] dark:text-slate-300 font-bold text-xl border-2 border-white dark:border-slate-700 shadow-sm">
                   {(apt.patientName?.charAt(0) || '?').toUpperCase()}
                 </div>
                 <div>
-                  <h3 className="text-[17px] font-bold text-[#0D1C2E] mb-1">{apt.patientName || 'Unknown Patient'}</h3>
-                  <div className="flex items-center gap-2 text-[13px] text-slate-500 font-medium font-inter">
+                  <h3 className="text-[17px] font-bold text-[#0D1C2E] dark:text-white mb-1">{apt.patientName || 'Unknown Patient'}</h3>
+                  <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 font-medium font-inter">
                     <span>{apt.contactPhone || 'No Phone'}</span>
                     <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                    <span className="text-[#055153] font-bold bg-[#ECFDF5] px-2 py-0.5 rounded-md">
+                    <span className="text-[#055153] dark:text-emerald-300 font-bold bg-[#ECFDF5] dark:bg-emerald-900/30 px-2 py-0.5 rounded-md">
                       {apt.specialization || 'General'}
                     </span>
                   </div>
@@ -283,14 +271,14 @@ const Schedule = () => {
 
               {/* Time Details */}
               <div className="flex items-center gap-3 w-48 shrink-0">
-                <div className="w-10 h-10 rounded-full bg-[#F1F5F9] flex items-center justify-center shrink-0">
-                  <Clock size={18} className="text-[#0D1C2E]" />
+                <div className="w-10 h-10 rounded-full bg-[#F1F5F9] dark:bg-slate-800 flex items-center justify-center shrink-0">
+                  <Clock size={18} className="text-[#0D1C2E] dark:text-slate-100" />
                 </div>
                 <div>
-                  <div className="text-[14px] font-bold text-[#0D1C2E] mb-0.5">
+                  <div className="text-[14px] font-bold text-[#0D1C2E] dark:text-white mb-0.5">
                     {safeFormatDate(apt.appointmentDate, 'hh:mm a', 'TBD')}
                   </div>
-                  <div className="text-[12px] text-slate-500 font-medium">
+                  <div className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">
                     {safeFormatDate(apt.appointmentDate, 'MMM dd, yyyy', 'No date set')}
                   </div>
                 </div>
@@ -299,27 +287,27 @@ const Schedule = () => {
               {/* Badges */}
               <div className="flex flex-col gap-2 items-start lg:items-center w-32 shrink-0">
                 <div className={`px-3 py-1 text-[11px] font-bold rounded-full flex items-center gap-1 uppercase tracking-wider
-                  ${apt.specialization === 'General Medicine' ? 'bg-[#EEF2FF] text-[#3B82F6]' : 'bg-[#ECFEFF] text-[#0891B2]'}`}>
+                  ${apt.specialization === 'General Medicine' ? 'bg-[#EEF2FF] text-[#3B82F6]' : 'bg-[#ECFEFF] text-[#0891B2] dark:bg-sky-900/40 dark:text-sky-300'}`}>
                   {apt.specialization === 'General Medicine' ? <User size={12}/> : <Video size={12}/>}
                   Consult
                 </div>
                 <div className={`px-2 py-0.5 text-[10px] font-bold rounded-md uppercase tracking-wide
-                  ${apt.status === 'Confirmed' ? 'bg-[#ECFDF5] text-emerald-600' : ''}
-                  ${apt.status === 'Pending' ? 'bg-[#FEF3C7] text-amber-700' : ''}
-                  ${apt.status === 'Cancelled' ? 'bg-[#FEF2F2] text-red-600' : ''}
-                  ${apt.status === 'Completed' ? 'bg-[#F1F5F9] text-slate-600' : ''}
+                  ${apt.status === 'Confirmed' ? 'bg-[#ECFDF5] text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-300' : ''}
+                  ${apt.status === 'Pending' ? 'bg-[#FEF3C7] text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' : ''}
+                  ${apt.status === 'Cancelled' ? 'bg-[#FEF2F2] text-red-600 dark:bg-rose-900/40 dark:text-rose-300' : ''}
+                  ${apt.status === 'Completed' ? 'bg-[#F1F5F9] text-slate-600 dark:bg-slate-800 dark:text-slate-300' : ''}
                 `}>
                   {apt.status}
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-3 mt-4 lg:mt-0 ml-auto bg-[#F8FAFB] p-2 rounded-2xl">
+              <div className="flex items-center gap-3 mt-4 lg:mt-0 ml-auto bg-[#F8FAFB] dark:bg-slate-800/80 p-2 rounded-2xl">
                 
                 {apt.status === 'Pending' && (
                   <button 
                     onClick={() => handleAction('accept', apt._id)}
-                    className="px-6 py-2.5 bg-[#DBEAFE] hover:bg-[#BFDBFE] text-[#1E3A8A] font-bold text-[14px] rounded-xl transition-colors shadow-sm"
+                    className="px-6 py-2.5 bg-[#DBEAFE] hover:bg-[#BFDBFE] text-[#1E3A8A] dark:bg-blue-900/50 dark:hover:bg-blue-900/70 dark:text-blue-100 font-bold text-[14px] rounded-xl transition-colors shadow-sm"
                   >
                     Confirm Visit
                   </button>
@@ -328,14 +316,14 @@ const Schedule = () => {
                 {apt.status === 'Confirmed' && (
                   <button 
                     onClick={() => handleStartCall(apt)}
-                    className="px-6 py-2.5 bg-[#055153] hover:bg-[#044042] text-white font-bold text-[14px] rounded-xl transition-colors shadow-sm"
+                    className="px-6 py-2.5 bg-[#055153] hover:bg-[#044042] dark:bg-teal-600 dark:hover:bg-teal-500 text-white font-bold text-[14px] rounded-xl transition-colors shadow-sm"
                   >
                     Start Call
                   </button>
                 )}
 
                 {apt.status === 'Cancelled' && (
-                  <div className="px-6 py-2.5 bg-slate-200 text-slate-500 font-bold text-[14px] rounded-xl opacity-70">
+                   <div className="px-6 py-2.5 bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-300 font-bold text-[14px] rounded-xl opacity-70">
                     Cancelled
                   </div>
                 )}
@@ -344,21 +332,21 @@ const Schedule = () => {
                   <>
                     <button 
                       onClick={() => setPrescriptionModalApt(apt)}
-                      className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white text-emerald-600 hover:text-emerald-700 transition-colors shadow-sm bg-transparent border border-transparent hover:border-emerald-200"
+                      className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white dark:hover:bg-slate-900 text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors shadow-sm bg-transparent border border-transparent hover:border-emerald-200 dark:hover:border-emerald-400/60"
                       title="Issue E-Prescription"
                     >
                       <FileText size={18} />
                     </button>
                     <button 
                       onClick={() => setReportModalApt(apt)}
-                      className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white text-indigo-600 hover:text-indigo-700 transition-colors shadow-sm bg-transparent border border-transparent hover:border-indigo-200"
+                      className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white dark:hover:bg-slate-900 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors shadow-sm bg-transparent border border-transparent hover:border-indigo-200 dark:hover:border-indigo-400/60"
                       title="View Patient Records"
                     >
                       <FolderOpen size={18} />
                     </button>
                     <button 
                       onClick={() => handleAction('reject', apt._id)}
-                      className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white text-slate-500 hover:text-red-500 transition-colors shadow-sm bg-transparent border border-transparent hover:border-slate-200"
+                      className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white dark:hover:bg-slate-900 text-slate-500 dark:text-slate-300 hover:text-red-500 dark:hover:text-red-400 transition-colors shadow-sm bg-transparent border border-transparent hover:border-slate-200 dark:hover:border-slate-500"
                     >
                       <X size={20} />
                     </button>
@@ -366,7 +354,7 @@ const Schedule = () => {
                 )}
 
                 {apt.status === 'Cancelled' && (
-                   <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white text-slate-500 hover:text-red-500 transition-colors shadow-sm bg-transparent border border-transparent hover:border-slate-200">
+                   <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white dark:hover:bg-slate-900 text-slate-500 dark:text-slate-300 hover:text-red-500 dark:hover:text-red-400 transition-colors shadow-sm bg-transparent border border-transparent hover:border-slate-200 dark:hover:border-slate-500">
                      <Trash2 size={18} />
                    </button>
                 )}

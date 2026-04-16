@@ -174,6 +174,59 @@ export const getPayment = async (req, res, next) => {
   }
 };
 
+// Monthly earnings for a doctor (completed appointment payments with metadata.doctorId)
+export const getDoctorPaymentSummary = async (req, res, next) => {
+  try {
+    const { doctorId } = req.query;
+    if (!doctorId) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'doctorId query parameter is required',
+      });
+    }
+
+    const role = req.user?.role;
+    if (role !== 'doctor' && role !== 'admin') {
+      return res.status(403).json({ status: 'error', message: 'Forbidden' });
+    }
+
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    const endOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+      999
+    );
+
+    const agg = await Payment.aggregate([
+      {
+        $match: {
+          status: 'completed',
+          createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+          'metadata.doctorId': String(doctorId),
+        },
+      },
+      { $group: { _id: null, total: { $sum: '$amount' } } },
+    ]);
+
+    const monthlyTotal = agg[0]?.total || 0;
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        monthlyTotal,
+        currency: 'LKR',
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Get all payments for a user
 export const getUserPayments = async (req, res, next) => {
   try {

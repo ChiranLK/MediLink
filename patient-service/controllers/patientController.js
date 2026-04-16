@@ -18,16 +18,21 @@ exports.createPatient = async (req, res) => {
       });
     }
 
-    // Check if patient with this userId already exists
+    // If patient already exists, update instead of rejecting
     const existingPatient = await Patient.findOne({ userId });
     if (existingPatient) {
-      return res.status(409).json({
-        success: false,
-        message: 'Patient with this userId already exists'
+      const updatedPatient = await Patient.findByIdAndUpdate(
+        existingPatient._id,
+        { $set: { name, age, gender, phone, address, bloodGroup, medicalHistory } },
+        { new: true, runValidators: true }
+      );
+      return res.status(200).json({
+        success: true,
+        message: 'Patient profile updated successfully',
+        data: updatedPatient
       });
     }
 
-    // Create new patient
     const patient = new Patient({
       userId,
       name,
@@ -35,11 +40,10 @@ exports.createPatient = async (req, res) => {
       gender,
       phone,
       address,
-      bloodGroup,      // Optional
-      medicalHistory   // Optional
+      bloodGroup,
+      medicalHistory
     });
 
-    // Save to database
     const savedPatient = await patient.save();
 
     res.status(201).json({
@@ -92,15 +96,17 @@ exports.getPatientById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Validate if id is a valid MongoDB ObjectId
-    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid patient ID format'
-      });
+    let patient = null;
+
+    // Try by MongoDB _id first
+    if (id.match(/^[0-9a-fA-F]{24}$/)) {
+      patient = await Patient.findById(id);
     }
 
-    const patient = await Patient.findById(id);
+    // Fall back to userId lookup
+    if (!patient) {
+      patient = await Patient.findOne({ userId: id });
+    }
 
     if (!patient) {
       return res.status(404).json({
@@ -135,16 +141,15 @@ exports.updatePatient = async (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
 
-    // Validate if id is a valid MongoDB ObjectId
-    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid patient ID format'
-      });
+    // Find patient by _id or userId
+    let patient = null;
+    if (id.match(/^[0-9a-fA-F]{24}$/)) {
+      patient = await Patient.findById(id);
+    }
+    if (!patient) {
+      patient = await Patient.findOne({ userId: id });
     }
 
-    // Check if patient exists
-    const patient = await Patient.findById(id);
     if (!patient) {
       return res.status(404).json({
         success: false,
@@ -152,7 +157,7 @@ exports.updatePatient = async (req, res) => {
       });
     }
 
-    // Prevent userId modification if it exists in updateData
+    // Prevent userId modification
     if (updateData.userId && updateData.userId !== patient.userId) {
       return res.status(400).json({
         success: false,
@@ -163,11 +168,10 @@ exports.updatePatient = async (req, res) => {
     // Remove fields that shouldn't be updated
     delete updateData._id;
     delete updateData.createdAt;
-    delete updateData.userId; // Ensure userId can't be updated
+    delete updateData.userId;
 
-    // Update patient
     const updatedPatient = await Patient.findByIdAndUpdate(
-      id,
+      patient._id,
       { $set: updateData },
       { new: true, runValidators: true }
     );

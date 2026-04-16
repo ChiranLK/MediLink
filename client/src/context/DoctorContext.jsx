@@ -10,6 +10,7 @@ export const DoctorProvider = ({ children }) => {
   const [doctorProfile, setDoctorProfile] = useState(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [profileError, setProfileError] = useState(null);
+  const [routeLoading, setRouteLoading] = useState(false);
 
   useEffect(() => {
     if (user && (user.role === 'doctor' || user.role === 'admin')) {
@@ -21,15 +22,23 @@ export const DoctorProvider = ({ children }) => {
   }, [user]);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+  const startRouteLoading = () => setRouteLoading(true);
+  const stopRouteLoading = () => setRouteLoading(false);
 
   const fetchDoctorProfile = async () => {
-    if (!user?.userId) return;
+    const uid = user?.userId || user?.id || user?._id;
+    if (!uid) return;
 
     setIsLoadingProfile(true);
     setProfileError(null);
 
     try {
-      const { data } = await customFetch.get(`/api/doctors/user/${user.userId}`);
+      // Send email & name as fallbacks so doctor-service can link profiles seeded with different emails
+      const params = new URLSearchParams();
+      if (user?.email) params.set('email', user.email);
+      if (user?.name) params.set('name', user.name);
+      const qs = params.toString() ? `?${params.toString()}` : '';
+      const { data } = await customFetch.get(`/api/doctors/user/${uid}${qs}`);
       if (data.success && data.data) {
         setDoctorProfile(data.data);
       } else {
@@ -53,12 +62,18 @@ export const DoctorProvider = ({ children }) => {
     <DoctorContext.Provider
       value={{
         doctorProfile,
-        doctorId: doctorProfile?.doctorId || null,
+        /** Same id used when booking (custom doctorId or Mongo _id string) */
+        doctorId:
+          doctorProfile?.doctorId ||
+          (doctorProfile?._id != null ? String(doctorProfile._id) : null),
         isLoadingProfile,
         profileError,
         refreshDoctorProfile,
         isSidebarOpen,
         toggleSidebar,
+        routeLoading,
+        startRouteLoading,
+        stopRouteLoading,
       }}
     >
       {children}

@@ -90,7 +90,7 @@ const PatientPrescriptions = () => {
   return (
     <div className="w-full max-w-6xl mx-auto p-6">
       {/* Header */}
-      <h1 className="text-4xl font-bold text-gray-800 mb-8">My Prescriptions</h1>
+      <h1 className="text-4xl font-bold text-[#1e293b] mb-8">My Prescriptions</h1>
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6 border-b border-gray-200">
@@ -105,7 +105,7 @@ const PatientPrescriptions = () => {
             className={`px-6 py-3 font-semibold border-b-2 transition ${
               activeTab === tab.id
                 ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-600 hover:text-gray-800'
+                : 'border-transparent text-gray-600 hover:text-[#1e293b]'
             }`}
           >
             {tab.label}
@@ -145,7 +145,7 @@ const PatientPrescriptions = () => {
               {/* Header */}
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                  <h3 className="text-xl font-semibold text-[#1e293b] mb-2">
                     {prescription.doctorName || 'Dr. Unknown'}
                   </h3>
                   <div className="flex flex-wrap gap-4 text-sm text-gray-600">
@@ -168,7 +168,7 @@ const PatientPrescriptions = () => {
 
               {/* Medicines List */}
               <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                <h4 className="font-semibold text-[#1e293b] mb-3 flex items-center gap-2">
                   <Pill size={18} className="text-blue-500" />
                   Medicines
                 </h4>
@@ -177,7 +177,7 @@ const PatientPrescriptions = () => {
                     <div key={idx} className="bg-white p-3 rounded border border-gray-200">
                       <div className="flex justify-between items-start mb-2">
                         <div>
-                          <h5 className="font-semibold text-gray-800">{medicine.name}</h5>
+                          <h5 className="font-semibold text-[#1e293b]">{medicine.name}</h5>
                           <p className="text-sm text-gray-600">{medicine.dosage}</p>
                         </div>
                       </div>
@@ -198,8 +198,8 @@ const PatientPrescriptions = () => {
               {/* Notes */}
               {prescription.notes && (
                 <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4 rounded">
-                  <h4 className="font-semibold text-gray-800 mb-2">Notes from Doctor</h4>
-                  <p className="text-gray-700">{prescription.notes}</p>
+                  <h4 className="font-semibold text-[#1e293b] mb-2">Notes from Doctor</h4>
+                  <p className="text-[#334155]">{prescription.notes}</p>
                 </div>
               )}
 
@@ -220,14 +220,14 @@ const PatientPrescriptions = () => {
       {selectedPrescription && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-8 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-3xl font-bold text-gray-800 mb-6">Prescription Details</h2>
+            <h2 className="text-3xl font-bold text-[#1e293b] mb-6">Prescription Details</h2>
 
             {/* Doctor Info */}
             <div className="bg-gradient-to-r from-blue-50 to-teal-50 p-6 rounded-lg mb-6">
               <div className="flex items-center gap-4 mb-4">
                 <User size={32} className="text-blue-500" />
                 <div>
-                  <h3 className="font-bold text-lg text-gray-800">
+                  <h3 className="font-bold text-lg text-[#1e293b]">
                     Dr. {selectedPrescription.doctorName}
                   </h3>
                   <p className="text-gray-600">{selectedPrescription.specialization || 'Medical Practitioner'}</p>
@@ -236,14 +236,14 @@ const PatientPrescriptions = () => {
               <div className="grid md:grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-gray-600">Issued Date</p>
-                  <p className="font-semibold text-gray-800">
+                  <p className="font-semibold text-[#1e293b]">
                     {format(new Date(selectedPrescription.date), 'MMMM dd, yyyy')}
                   </p>
                 </div>
                 {selectedPrescription.expiryDate && (
                   <div>
                     <p className="text-gray-600">Expiry Date</p>
-                    <p className="font-semibold text-gray-800">
+                    <p className="font-semibold text-[#1e293b]">
                       {format(new Date(selectedPrescription.expiryDate), 'MMMM dd, yyyy')}
                     </p>
                   </div>
@@ -253,15 +253,15 @@ const PatientPrescriptions = () => {
 
             {/* Medicines */}
             <div className="mb-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <h3 className="text-lg font-bold text-[#1e293b] mb-4 flex items-center gap-2">
                 <Pill size={24} className="text-blue-500" />
                 Prescribed Medicines
               </h3>
               <div className="space-y-4">
                 {selectedPrescription.medicines?.map((medicine, idx) => (
                   <div key={idx} className="border border-gray-200 rounded-lg p-4">
-                    <h4 className="font-bold text-lg text-gray-800 mb-2">{medicine.name}</h4>
-                    <div className="grid md:grid-cols-2 gap-4 text-gray-700">
+                    <h4 className="font-bold text-lg text-[#1e293b] mb-2">{medicine.name}</h4>
+                    <div className="grid md:grid-cols-2 gap-4 text-[#334155]">
                       <div>
                         <p className="text-sm text-gray-600">Dosage</p>
                         <p className="font-semibold">{medicine.dosage}</p>
@@ -277,7 +277,7 @@ const PatientPrescriptions = () => {
                     </div>
                     {medicine.instructions && (
                       <div className="mt-3 p-3 bg-yellow-50 rounded">
-                        <p className="text-sm text-gray-700">
+                        <p className="text-sm text-[#334155]">
                           <strong>Special Instructions:</strong> {medicine.instructions}
                         </p>
                       </div>
@@ -290,8 +290,8 @@ const PatientPrescriptions = () => {
             {/* Additional Notes */}
             {selectedPrescription.notes && (
               <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded">
-                <h3 className="font-bold text-gray-800 mb-2">Doctor's Notes</h3>
-                <p className="text-gray-700">{selectedPrescription.notes}</p>
+                <h3 className="font-bold text-[#1e293b] mb-2">Doctor's Notes</h3>
+                <p className="text-[#334155]">{selectedPrescription.notes}</p>
               </div>
             )}
 

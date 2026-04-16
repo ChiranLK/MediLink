@@ -2,161 +2,207 @@ const path = require('path');
 const fs = require('fs');
 const cloudinary = require('../config/cloudinary');
 
+/** Base URL for links to this service’s `/uploads` (browser must reach it; set in .env). */
+function publicBaseUrl() {
+  const fromEnv = process.env.PATIENT_PUBLIC_URL;
+  if (fromEnv) return fromEnv.replace(/\/$/, '');
+  const port = process.env.PORT || 3001;
+  return `http://localhost:${port}`;
+}
+
+function localFileUrl(reqFile) {
+  const filename = path.basename(reqFile.path);
+  return `${publicBaseUrl()}/uploads/${encodeURIComponent(filename)}`;
+}
+
+function sendLocalSingleSuccess(res, reqFile, message = 'File stored locally') {
+  const filename = path.basename(reqFile.path);
+  res.status(200).json({
+    success: true,
+    message,
+    data: {
+      fileUrl: localFileUrl(reqFile),
+      fileName: filename,
+      originalName: reqFile.originalname,
+      fileSize: reqFile.size,
+      mimeType: reqFile.mimetype,
+      cloudinaryPublicId: null,
+    },
+  });
+}
+
+const useLocalOnly =
+  process.env.USE_LOCAL_UPLOAD === 'true' || process.env.SKIP_CLOUDINARY === 'true';
+
 /**
  * Handle single file upload
- * @route POST /api/upload
- * @param {Object} req - Express request object with file
- * @param {Object} res - Express response object
  */
 exports.uploadFile = async (req, res) => {
   try {
-    // Check if file was uploaded
     if (!req.file) {
       return res.status(400).json({
         success: false,
-        message: 'No file uploaded'
+        message: 'No file uploaded',
       });
     }
 
-    // Upload to Cloudinary
-    const result = await cloudinary.uploader.upload(req.file.path, {
-      folder: 'medilink/patients',
-      resource_type: 'auto'
-    });
+    if (useLocalOnly) {
+      return sendLocalSuccessResponse(res, req.file);
+    }
 
-    // Delete local file after successful upload
-    fs.unlink(req.file.path, (err) => {
-      if (err) console.error('Error deleting local file:', err);
-    });
+    try {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: 'medilink/patients',
+        resource_type: 'auto',
+      });
 
-    res.status(200).json({
-      success: true,
-      message: 'File uploaded successfully',
-      data: {
-        fileUrl: result.secure_url,
-        fileName: result.original_filename,
-        originalName: req.file.originalname,
-        fileSize: req.file.size,
-        mimeType: req.file.mimetype,
-        cloudinaryPublicId: result.public_id
-      }
-    });
+      fs.unlink(req.file.path, (err) => {
+        if (err) console.error('Error deleting local file:', err);
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: 'File uploaded successfully',
+        data: {
+          fileUrl: result.secure_url,
+          fileName: result.original_filename,
+          originalName: req.file.originalname,
+          fileSize: req.file.size,
+          mimeType: req.file.mimetype,
+          cloudinaryPublicId: result.public_id,
+        },
+      });
+    } catch (cloudErr) {
+      console.error('Cloudinary upload failed, using local file:', cloudErr.message || cloudErr);
+      return sendLocalSuccessResponse(res, req.file);
+    }
   } catch (error) {
     console.error('Error uploading file:', error);
-    
-    // Delete file if there was an error
     if (req.file) {
       fs.unlink(req.file.path, (err) => {
         if (err) console.error('Error deleting file:', err);
       });
     }
-
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Error uploading file',
-      error: error.message
+      error: error.message,
     });
   }
 };
 
+function sendLocalSuccessResponse(res, reqFile) {
+  return sendLocalSingleSuccess(
+    res,
+    reqFile,
+    'File stored on server (local upload)'
+  );
+}
+
 /**
  * Handle multiple file upload
- * @route POST /api/upload-multiple
- * @param {Object} req - Express request object with files
- * @param {Object} res - Express response object
  */
 exports.uploadMultipleFiles = async (req, res) => {
   try {
-    // Check if files were uploaded
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'No files uploaded'
+        message: 'No files uploaded',
       });
     }
 
-    // Upload all files to Cloudinary
-    const uploadPromises = req.files.map(file => 
-      cloudinary.uploader.upload(file.path, {
-        folder: 'medilink/patients',
-        resource_type: 'auto'
-      })
-    );
-
-    const results = await Promise.all(uploadPromises);
-
-    // Delete local files after successful upload
-    req.files.forEach(file => {
-      fs.unlink(file.path, (err) => {
-        if (err) console.error('Error deleting local file:', err);
+    if (useLocalOnly) {
+      const uploadedFiles = req.files.map((file) => ({
+        fileUrl: localFileUrl(file),
+        fileName: path.basename(file.path),
+        fileSize: file.size,
+        mimeType: file.mimetype,
+        cloudinaryPublicId: null,
+      }));
+      return res.status(200).json({
+        success: true,
+        message: `${uploadedFiles.length} file(s) stored locally`,
+        data: uploadedFiles,
       });
-    });
+    }
 
-    // Map results to response format
-    const uploadedFiles = results.map(result => ({
-      fileUrl: result.secure_url,
-      fileName: result.original_filename,
-      fileSize: result.bytes,
-      mimeType: result.resource_type,
-      cloudinaryPublicId: result.public_id
-    }));
+    const uploadedFiles = [];
+    for (const file of req.files) {
+      try {
+        const result = await cloudinary.uploader.upload(file.path, {
+          folder: 'medilink/patients',
+          resource_type: 'auto',
+        });
+        fs.unlink(file.path, (err) => {
+          if (err) console.error('Error deleting local file:', err);
+        });
+        uploadedFiles.push({
+          fileUrl: result.secure_url,
+          fileName: result.original_filename,
+          fileSize: result.bytes,
+          mimeType: result.resource_type,
+          cloudinaryPublicId: result.public_id,
+        });
+      } catch (e) {
+        console.error('Cloudinary failed for one file, keeping local:', e.message || e);
+        uploadedFiles.push({
+          fileUrl: localFileUrl(file),
+          fileName: path.basename(file.path),
+          fileSize: file.size,
+          mimeType: file.mimetype,
+          cloudinaryPublicId: null,
+        });
+      }
+    }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: `${uploadedFiles.length} file(s) uploaded successfully`,
-      data: uploadedFiles
+      data: uploadedFiles,
     });
   } catch (error) {
     console.error('Error uploading files:', error);
-
-    // Delete all files if there was an error
     if (req.files) {
-      req.files.forEach(file => {
+      req.files.forEach((file) => {
         fs.unlink(file.path, (err) => {
           if (err) console.error('Error deleting file:', err);
         });
       });
     }
-
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Error uploading files',
-      error: error.message
+      error: error.message,
     });
   }
 };
 
 /**
  * Delete uploaded file
- * @route DELETE /api/delete-file/:publicId
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
  */
 exports.deleteFile = async (req, res) => {
   try {
     const { publicId } = req.params;
 
-    // Validate publicId to prevent directory traversal attacks
     if (publicId.includes('..') || publicId.includes('/') || publicId.includes('\\')) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid publicId format'
+        message: 'Invalid publicId format',
       });
     }
 
-    // Delete from Cloudinary
     await cloudinary.uploader.destroy(publicId);
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      message: 'File deleted successfully from Cloudinary'
+      message: 'File deleted successfully from Cloudinary',
     });
   } catch (error) {
     console.error('Error deleting file:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Error deleting file',
-      error: error.message
+      error: error.message,
     });
   }
 };

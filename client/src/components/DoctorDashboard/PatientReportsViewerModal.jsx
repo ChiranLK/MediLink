@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, ExternalLink, FileText, FlaskConical, Activity, HeartPulse, UserSquare2, ShieldAlert, Loader2, Database } from 'lucide-react';
+import { X, ExternalLink, FileText, FlaskConical, Activity, HeartPulse, UserSquare2, ShieldAlert, Loader2, Database, Download } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import customFetch from '../../utils/customFetch';
 
@@ -19,7 +19,7 @@ const PatientReportsViewerModal = ({ isOpen, onClose, appointment }) => {
         const patientId = typeof appointment.patientId === 'object' ? appointment.patientId._id : appointment.patientId;
         
         // As defined in patient-service/routes/reportRoutes.js AND mapped in vite.config.js proxy rules
-        const { data } = await customFetch.get(`/api/reports/patient/${patientId}`);
+        const { data } = await customFetch.get(`/api/patient/reports/patient/${patientId}`);
         if (data.success || data.data) {
           setReports(data.data || []);
         }
@@ -173,12 +173,23 @@ const PatientReportsViewerModal = ({ isOpen, onClose, appointment }) => {
                     </div>
 
                     {/* Right Column: Actions */}
-                    <div className="w-full md:w-auto shrink-0 flex justify-end">
+                    <div className="w-full md:w-auto shrink-0 flex flex-wrap justify-end gap-2">
+                      <a
+                        href={report.fileUrl}
+                        download
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 px-5 py-3 bg-[#055153] text-white font-bold text-[14px] rounded-xl hover:bg-[#044143] transition-colors"
+                      >
+                        <Download size={16} />
+                        Download
+                      </a>
                       <button 
+                         type="button"
                          onClick={() => window.open(report.fileUrl, '_blank')}
                          className="flex items-center justify-center gap-2 px-6 py-3 w-full md:w-auto bg-slate-50 hover:bg-[#055153] hover:text-white text-[#0D1C2E] font-bold text-[14px] rounded-xl transition-all border border-slate-200 hover:border-transparent cursor-pointer group-hover:shadow-sm"
                       >
-                        <span>View Document</span>
+                        <span>View</span>
                         <ExternalLink size={16} className="opacity-70 group-hover:opacity-100" />
                       </button>
                     </div>

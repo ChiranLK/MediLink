@@ -9,6 +9,7 @@ import uploadRouter from './routes/uploadRoutes.js';
 import appointmentSettingsRouter from './routes/appointmentSettingsRoutes.js';
 import blockedDaysRouter from './routes/blockedDaysRoutes.js';
 import timeSlotRouter from './routes/timeSlotRoutes.js';
+import doctorNotesRouter from './routes/doctorNotesRoutes.js';
 
 const app = express();
 
@@ -18,15 +19,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.use('/', doctorRouter);
-app.use('/', appointmentRouter);
-app.use('/', patientReportRouter);
-app.use('/availability', availabilityRouter);
-app.use('/availability/settings', appointmentSettingsRouter);
-app.use('/availability/blocked-days', blockedDaysRouter);
-app.use('/availability', timeSlotRouter);
-app.use('/prescriptions', prescriptionRouter);
-app.use('/upload', uploadRouter);
+app.use('/api/doctors', doctorRouter);
+app.use('/api/doctors', appointmentRouter);
+app.use('/api/doctors', doctorNotesRouter);
+app.use('/api/doctors', patientReportRouter);
+app.use('/api/availability', availabilityRouter);
+app.use('/api/availability/settings', appointmentSettingsRouter);
+app.use('/api/availability/blocked-days', blockedDaysRouter);
+app.use('/api/availability', timeSlotRouter);
+app.use('/api/prescriptions', prescriptionRouter);
+app.use('/api/upload', uploadRouter);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

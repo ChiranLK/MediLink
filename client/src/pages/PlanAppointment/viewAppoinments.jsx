@@ -55,7 +55,7 @@ const ViewAppointments = () => {
       'Completed': 'bg-blue-100 text-blue-800 border border-blue-300',
       'Cancelled': 'bg-red-100 text-red-800 border border-red-300',
     };
-    return statusStyles[status] || 'bg-gray-100 text-gray-800 border border-gray-300';
+    return statusStyles[status] || 'bg-gray-100 text-[#1e293b] border border-gray-300';
   };
 
   const formatDate = (dateStr) => {
