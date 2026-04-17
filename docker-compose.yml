@@ -138,6 +138,15 @@ services:
     depends_on:
       - auth-service
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: medilink-rabbitmq
+    ports:
+      - "5782:5672"
+      - "15682:15672"
+    networks:
+      - medilink-network
+
   notification-service:
     build:
       context: ./notification-service
@@ -147,6 +156,7 @@ services:
     environment:
       - PORT=5003
       - NODE_ENV=development
+      - RABBITMQ_URL=amqp://rabbitmq:5672
     env_file:
       - ./notification-service/.env
     volumes:
@@ -155,6 +165,8 @@ services:
     command: npx nodemon server.js
     networks:
       - medilink-network
+    depends_on:
+      - rabbitmq
 
   payment-service:
     build:

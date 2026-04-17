@@ -8,6 +8,10 @@ import {
   X,
   RefreshCw,
   Clock,
+  Check,
+  CheckCheck,
+  Trash2,
+  UserCog,
 } from "lucide-react";
 import { patientApi } from "@/patient/services/patientApi";
 import { useAuth } from "@/context/AuthContext";
@@ -28,6 +32,27 @@ const TYPE_CONFIG = {
     color: "text-violet-600 dark:text-violet-400",
     bg: "bg-violet-50 dark:bg-violet-900/30",
     ring: "ring-violet-200 dark:ring-violet-800",
+  },
+  APPOINTMENT_BOOKED_DOCTOR: {
+    icon: CalendarCheck,
+    label: "New Appointment",
+    color: "text-blue-600 dark:text-blue-400",
+    bg: "bg-blue-50 dark:bg-blue-900/30",
+    ring: "ring-blue-200 dark:ring-blue-800",
+  },
+  CONSULTATION_COMPLETED_DOCTOR: {
+    icon: VideoIcon,
+    label: "Consultation Completed",
+    color: "text-indigo-600 dark:text-indigo-400",
+    bg: "bg-indigo-50 dark:bg-indigo-900/30",
+    ring: "ring-indigo-200 dark:ring-indigo-800",
+  },
+  PROFILE_UPDATED: {
+    icon: UserCog,
+    label: "Profile Updated",
+    color: "text-amber-600 dark:text-amber-400",
+    bg: "bg-amber-50 dark:bg-amber-900/30",
+    ring: "ring-amber-200 dark:ring-amber-800",
   },
 };
 
@@ -50,16 +75,17 @@ const STATUS_CONFIG = {
 };
 
 // ── Row ───────────────────────────────────────────────────────────
-function NotificationRow({ n, isNew }) {
+function NotificationRow({ n, onMarkRead }) {
   const cfg = TYPE_CONFIG[n.type] || TYPE_CONFIG.APPOINTMENT_BOOKED;
   const statusCfg = STATUS_CONFIG[n.status] || STATUS_CONFIG.SUCCESS;
   const Icon = cfg.icon;
   const StatusIcon = statusCfg.icon;
+  const isUnread = !n.read;
 
   return (
     <div
       className={`flex gap-3 px-4 py-3.5 border-b border-slate-100 dark:border-slate-800 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 ${
-        isNew ? "bg-teal-50/40 dark:bg-teal-900/10" : ""
+        isUnread ? "bg-teal-50/40 dark:bg-teal-900/10" : ""
       }`}
     >
       {/* Icon */}
@@ -74,6 +100,9 @@ function NotificationRow({ n, isNew }) {
         <div className="flex items-center justify-between gap-1 mb-0.5">
           <p className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">
             {cfg.label}
+            {isUnread && (
+              <span className="ml-1.5 inline-block w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
+            )}
           </p>
           <span
             className={`flex items-center gap-0.5 text-[10px] font-semibold flex-shrink-0 ${statusCfg.style}`}
@@ -85,13 +114,25 @@ function NotificationRow({ n, isNew }) {
         <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">
           {n.message}
         </p>
-        <div className="flex items-center gap-1 mt-1.5">
-          <Clock size={10} className="text-slate-400" />
-          <span className="text-[10px] text-slate-400 dark:text-slate-500">
-            {formatDistanceToNow(new Date(n.timestamp), { addSuffix: true })}
-          </span>
-          {isNew && (
-            <span className="ml-1 inline-block w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
+        <div className="flex items-center justify-between mt-1.5">
+          <div className="flex items-center gap-1">
+            <Clock size={10} className="text-slate-400" />
+            <span className="text-[10px] text-slate-400 dark:text-slate-500">
+              {formatDistanceToNow(new Date(n.timestamp), { addSuffix: true })}
+            </span>
+          </div>
+          {isUnread && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onMarkRead(n._id);
+              }}
+              className="text-[10px] text-teal-600 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 font-semibold flex items-center gap-0.5"
+              title="Mark as read"
+            >
+              <Check size={10} />
+              Read
+            </button>
           )}
         </div>
       </div>
@@ -105,27 +146,28 @@ export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [lastSeen, setLastSeen] = useState(
-    () => new Date(sessionStorage.getItem("notif_seen") || 0),
-  );
   const panelRef = useRef(null);
   const lastFetch = useRef(null);
 
+  const recipientId = user?.userId || user?.id;
+
   const fetchHistory = useCallback(async () => {
-    if (!user?.email) return;
-    // Throttle — max once per 30 s
+    if (!user?.email && !recipientId) return;
     if (lastFetch.current && Date.now() - lastFetch.current < 30_000) return;
     try {
       setLoading(true);
       lastFetch.current = Date.now();
-      const { data } = await patientApi.getNotificationHistory(user.email);
+      const { data } = await patientApi.getNotificationHistory(
+        user?.email,
+        recipientId,
+      );
       setNotifications(data || []);
     } catch {
-      // Silently fail — notification bell is not critical
+      // Silently fail
     } finally {
       setLoading(false);
     }
-  }, [user?.email]);
+  }, [user?.email, recipientId]);
 
   // Fetch on mount
   useEffect(() => {
@@ -135,7 +177,10 @@ export default function NotificationBell() {
   // Refresh every 60 s when panel is open
   useEffect(() => {
     if (!open) return;
-    const id = setInterval(fetchHistory, 60_000);
+    const id = setInterval(() => {
+      lastFetch.current = null;
+      fetchHistory();
+    }, 60_000);
     return () => clearInterval(id);
   }, [open, fetchHistory]);
 
@@ -151,21 +196,45 @@ export default function NotificationBell() {
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  const unread = notifications.filter(
-    (n) => new Date(n.timestamp) > lastSeen,
-  ).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   const handleOpen = () => {
     setOpen((v) => {
       if (!v) {
+        lastFetch.current = null;
         fetchHistory();
-        // Mark all as read when opening
-        const now = new Date();
-        setLastSeen(now);
-        sessionStorage.setItem("notif_seen", now.toISOString());
       }
       return !v;
     });
+  };
+
+  const handleMarkRead = async (id) => {
+    try {
+      await patientApi.markNotificationRead(id);
+      setNotifications((prev) =>
+        prev.map((n) => (n._id === id ? { ...n, read: true } : n)),
+      );
+    } catch {
+      // silent
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      await patientApi.markAllNotificationsRead(recipientId, user?.email);
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    } catch {
+      // silent
+    }
+  };
+
+  const handleClearAll = async () => {
+    try {
+      await patientApi.clearNotifications(recipientId, user?.email);
+      setNotifications([]);
+    } catch {
+      // silent
+    }
   };
 
   return (
@@ -178,12 +247,12 @@ export default function NotificationBell() {
         aria-label="Notifications"
       >
         <Bell size={22} strokeWidth={2.5} />
-        {unread > 0 && (
+        {unreadCount > 0 && (
           <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 bg-red-500 border-2 border-white dark:border-slate-950 rounded-full text-[9px] font-bold text-white flex items-center justify-center leading-none">
-            {unread > 9 ? "9+" : unread}
+            {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
-        {unread === 0 && (
+        {unreadCount === 0 && notifications.length > 0 && (
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-emerald-500 border-2 border-white dark:border-slate-950 rounded-full" />
         )}
       </button>
@@ -203,6 +272,7 @@ export default function NotificationBell() {
                 </p>
                 <p className="text-[10px] text-slate-400 dark:text-slate-500">
                   {notifications.length} total
+                  {unreadCount > 0 ? ` · ${unreadCount} unread` : ""}
                 </p>
               </div>
             </div>
@@ -230,8 +300,34 @@ export default function NotificationBell() {
             </div>
           </div>
 
+          {/* Action Bar */}
+          {notifications.length > 0 && (
+            <div className="flex items-center justify-between px-4 py-2 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
+              {unreadCount > 0 ? (
+                <button
+                  onClick={handleMarkAllRead}
+                  className="flex items-center gap-1 text-[11px] font-semibold text-teal-600 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 transition-colors"
+                >
+                  <CheckCheck size={12} />
+                  Mark all as read
+                </button>
+              ) : (
+                <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                  All caught up!
+                </span>
+              )}
+              <button
+                onClick={handleClearAll}
+                className="flex items-center gap-1 text-[11px] font-semibold text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors"
+              >
+                <Trash2 size={12} />
+                Clear all
+              </button>
+            </div>
+          )}
+
           {/* Panel Body */}
-          <div className="max-h-[420px] overflow-y-auto">
+          <div className="max-h-[380px] overflow-y-auto">
             {loading && notifications.length === 0 ? (
               <div className="flex items-center justify-center gap-2 py-12 text-slate-400 dark:text-slate-500">
                 <RefreshCw size={16} className="animate-spin" />
@@ -255,7 +351,7 @@ export default function NotificationBell() {
                 <NotificationRow
                   key={n._id || i}
                   n={n}
-                  isNew={new Date(n.timestamp) > lastSeen}
+                  onMarkRead={handleMarkRead}
                 />
               ))
             )}

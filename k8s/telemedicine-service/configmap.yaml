@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: telemedicine-service-config
+  namespace: default
+  labels:
+    app: telemedicine-service
+data:
+  log-level: "info"

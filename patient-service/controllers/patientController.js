@@ -1,4 +1,6 @@
-const Patient = require('../models/Patient');
+const Patient = require("../models/Patient");
+const cloudinary = require("../config/cloudinary");
+const fs = require("fs");
 
 /**
  * Create a new patient
@@ -8,13 +10,34 @@ const Patient = require('../models/Patient');
  */
 exports.createPatient = async (req, res) => {
   try {
-    const { userId, name, age, gender, phone, address, bloodGroup, medicalHistory } = req.body;
+    const {
+      userId,
+      name,
+      age,
+      gender,
+      phone,
+      address,
+      bloodGroup,
+      medicalHistory,
+    } = req.body;
 
     // Validate required fields
     if (!userId || !name || !age || !gender || !phone || !address) {
       return res.status(400).json({
         success: false,
-        message: 'Required fields: userId, name, age, gender, phone, address'
+        message: "Required fields: userId, name, age, gender, phone, address",
+      });
+    }
+
+    // Check phone uniqueness
+    const phoneExists = await Patient.findOne({
+      phone,
+      userId: { $ne: userId },
+    });
+    if (phoneExists) {
+      return res.status(400).json({
+        success: false,
+        message: "This phone number is already registered with another patient",
       });
     }
 
@@ -23,13 +46,23 @@ exports.createPatient = async (req, res) => {
     if (existingPatient) {
       const updatedPatient = await Patient.findByIdAndUpdate(
         existingPatient._id,
-        { $set: { name, age, gender, phone, address, bloodGroup, medicalHistory } },
-        { new: true, runValidators: true }
+        {
+          $set: {
+            name,
+            age,
+            gender,
+            phone,
+            address,
+            bloodGroup,
+            medicalHistory,
+          },
+        },
+        { new: true, runValidators: true },
       );
       return res.status(200).json({
         success: true,
-        message: 'Patient profile updated successfully',
-        data: updatedPatient
+        message: "Patient profile updated successfully",
+        data: updatedPatient,
       });
     }
 
@@ -41,22 +74,22 @@ exports.createPatient = async (req, res) => {
       phone,
       address,
       bloodGroup,
-      medicalHistory
+      medicalHistory,
     });
 
     const savedPatient = await patient.save();
 
     res.status(201).json({
       success: true,
-      message: 'Patient created successfully',
-      data: savedPatient
+      message: "Patient created successfully",
+      data: savedPatient,
     });
   } catch (error) {
-    console.error('Error creating patient:', error);
+    console.error("Error creating patient:", error);
     res.status(500).json({
       success: false,
-      message: 'Error creating patient',
-      error: error.message
+      message: "Error creating patient",
+      error: error.message,
     });
   }
 };
@@ -70,18 +103,18 @@ exports.createPatient = async (req, res) => {
 exports.getAllPatients = async (req, res) => {
   try {
     const patients = await Patient.find().sort({ createdAt: -1 });
-    
+
     res.status(200).json({
       success: true,
       count: patients.length,
-      data: patients
+      data: patients,
     });
   } catch (error) {
-    console.error('Error fetching patients:', error);
+    console.error("Error fetching patients:", error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching patients',
-      error: error.message
+      message: "Error fetching patients",
+      error: error.message,
     });
   }
 };
@@ -111,21 +144,21 @@ exports.getPatientById = async (req, res) => {
     if (!patient) {
       return res.status(404).json({
         success: false,
-        message: 'Patient not found'
+        message: "Patient not found",
       });
     }
 
     res.status(200).json({
       success: true,
-      message: 'Patient retrieved successfully',
-      data: patient
+      message: "Patient retrieved successfully",
+      data: patient,
     });
   } catch (error) {
-    console.error('Error fetching patient:', error);
+    console.error("Error fetching patient:", error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching patient',
-      error: error.message
+      message: "Error fetching patient",
+      error: error.message,
     });
   }
 };
@@ -153,7 +186,7 @@ exports.updatePatient = async (req, res) => {
     if (!patient) {
       return res.status(404).json({
         success: false,
-        message: 'Patient not found'
+        message: "Patient not found",
       });
     }
 
@@ -161,8 +194,23 @@ exports.updatePatient = async (req, res) => {
     if (updateData.userId && updateData.userId !== patient.userId) {
       return res.status(400).json({
         success: false,
-        message: 'Cannot modify userId'
+        message: "Cannot modify userId",
       });
+    }
+
+    // Check phone uniqueness
+    if (updateData.phone) {
+      const phoneExists = await Patient.findOne({
+        phone: updateData.phone,
+        _id: { $ne: patient._id },
+      });
+      if (phoneExists) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "This phone number is already registered with another patient",
+        });
+      }
     }
 
     // Remove fields that shouldn't be updated
@@ -173,20 +221,20 @@ exports.updatePatient = async (req, res) => {
     const updatedPatient = await Patient.findByIdAndUpdate(
       patient._id,
       { $set: updateData },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     res.status(200).json({
       success: true,
-      message: 'Patient updated successfully',
-      data: updatedPatient
+      message: "Patient updated successfully",
+      data: updatedPatient,
     });
   } catch (error) {
-    console.error('Error updating patient:', error);
+    console.error("Error updating patient:", error);
     res.status(500).json({
       success: false,
-      message: 'Error updating patient',
-      error: error.message
+      message: "Error updating patient",
+      error: error.message,
     });
   }
 };
@@ -205,7 +253,7 @@ exports.deletePatient = async (req, res) => {
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid patient ID format'
+        message: "Invalid patient ID format",
       });
     }
 
@@ -214,21 +262,165 @@ exports.deletePatient = async (req, res) => {
     if (!patient) {
       return res.status(404).json({
         success: false,
-        message: 'Patient not found'
+        message: "Patient not found",
       });
     }
 
     res.status(200).json({
       success: true,
-      message: 'Patient deleted successfully',
-      data: patient
+      message: "Patient deleted successfully",
+      data: patient,
     });
   } catch (error) {
-    console.error('Error deleting patient:', error);
+    console.error("Error deleting patient:", error);
     res.status(500).json({
       success: false,
-      message: 'Error deleting patient',
-      error: error.message
+      message: "Error deleting patient",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Upload / replace profile photo for a patient
+ * @route POST /patients/:id/photo
+ */
+exports.uploadProfilePhoto = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No photo file uploaded" });
+    }
+
+    const { id } = req.params;
+    let patient = id.match(/^[0-9a-fA-F]{24}$/)
+      ? await Patient.findById(id)
+      : null;
+    if (!patient) patient = await Patient.findOne({ userId: id });
+    if (!patient) {
+      fs.unlink(req.file.path, () => {});
+      return res
+        .status(404)
+        .json({ success: false, message: "Patient not found" });
+    }
+
+    // Delete old Cloudinary photo if exists
+    if (patient.profilePhotoPublicId) {
+      try {
+        await cloudinary.uploader.destroy(patient.profilePhotoPublicId);
+      } catch (_) {
+        /* non-fatal */
+      }
+    }
+
+    // Upload new photo to Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "medilink/patient-profiles",
+      transformation: [
+        { width: 400, height: 400, crop: "fill", gravity: "face" },
+      ],
+    });
+
+    fs.unlink(req.file.path, () => {});
+
+    patient.profilePhoto = result.secure_url;
+    patient.profilePhotoPublicId = result.public_id;
+    await patient.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile photo updated",
+      data: { profilePhoto: result.secure_url },
+    });
+  } catch (error) {
+    if (req.file) fs.unlink(req.file.path, () => {});
+    console.error("Error uploading profile photo:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to upload photo",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Remove profile photo for a patient
+ * @route DELETE /patients/:id/photo
+ */
+exports.removeProfilePhoto = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let patient = id.match(/^[0-9a-fA-F]{24}$/)
+      ? await Patient.findById(id)
+      : null;
+    if (!patient) patient = await Patient.findOne({ userId: id });
+    if (!patient) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Patient not found" });
+    }
+
+    if (patient.profilePhotoPublicId) {
+      try {
+        await cloudinary.uploader.destroy(patient.profilePhotoPublicId);
+      } catch (_) {
+        /* non-fatal */
+      }
+    }
+
+    patient.profilePhoto = undefined;
+    patient.profilePhotoPublicId = undefined;
+    await patient.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile photo removed",
+    });
+  } catch (error) {
+    console.error("Error removing profile photo:", error);
+    return res
+      .status(500)
+      .json({
+        success: false,
+        message: "Failed to remove photo",
+        error: error.message,
+      });
+  }
+};
+
+/**
+ * Request profile deletion (patient-initiated; admin takes final action)
+ * @route POST /patients/:id/request-delete
+ */
+exports.requestDeletion = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let patient = id.match(/^[0-9a-fA-F]{24}$/)
+      ? await Patient.findById(id)
+      : null;
+    if (!patient) patient = await Patient.findOne({ userId: id });
+    if (!patient) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Patient not found" });
+    }
+
+    patient.deletionRequested = true;
+    patient.deletionRequestedAt = new Date();
+    await patient.save();
+
+    return res.status(200).json({
+      success: true,
+      message:
+        "Account deletion request submitted. An administrator will review and process your request.",
+    });
+  } catch (error) {
+    console.error("Error requesting deletion:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to submit deletion request",
+      error: error.message,
     });
   }
 };

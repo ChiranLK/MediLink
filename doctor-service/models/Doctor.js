@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 /**
  * Doctor Model — doctor-service
@@ -27,48 +27,48 @@ const DoctorSchema = new mongoose.Schema(
     // ─── Basic Info ───────────────────────────────────────────────
     name: {
       type: String,
-      required: [true, 'Please provide doctor name'],
+      required: [true, "Please provide doctor name"],
       trim: true,
-      minlength: [3, 'Name must be at least 3 characters'],
-      maxlength: [100, 'Name cannot exceed 100 characters'],
+      minlength: [3, "Name must be at least 3 characters"],
+      maxlength: [100, "Name cannot exceed 100 characters"],
     },
 
     email: {
       type: String,
-      required: [true, 'Please provide email'],
+      required: [true, "Please provide email"],
       unique: true,
       trim: true,
       lowercase: true,
       match: [
         /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
-        'Please provide a valid email address',
+        "Please provide a valid email address",
       ],
     },
 
     phone: {
       type: String,
-      required: [true, 'Please provide phone number'],
+      required: [true, "Please provide phone number"],
       trim: true,
-      match: [/^[0-9]{10}$/, 'Please provide a valid 10-digit phone number'],
+      match: [/^[0-9]{10}$/, "Please provide a valid 10-digit phone number"],
     },
 
     // ─── Professional Info ────────────────────────────────────────
     specialization: {
       type: String,
-      required: [true, 'Please provide specialization'],
+      required: [true, "Please provide specialization"],
       trim: true,
     },
 
     hospital: {
       type: String,
       trim: true,
-      maxlength: [150, 'Hospital name cannot exceed 150 characters'],
+      maxlength: [150, "Hospital name cannot exceed 150 characters"],
     },
 
     experience: {
       type: Number,
-      min: [0, 'Experience cannot be negative'],
-      max: [60, 'Experience cannot exceed 60 years'],
+      min: [0, "Experience cannot be negative"],
+      max: [60, "Experience cannot exceed 60 years"],
       default: 0,
     },
 
@@ -76,41 +76,57 @@ const DoctorSchema = new mongoose.Schema(
     qualifications: {
       type: String,
       trim: true,
-      maxlength: [500, 'Qualifications cannot exceed 500 characters'],
+      maxlength: [500, "Qualifications cannot exceed 500 characters"],
     },
 
     bio: {
       type: String,
       trim: true,
-      maxlength: [1000, 'Bio cannot exceed 1000 characters'],
+      maxlength: [1000, "Bio cannot exceed 1000 characters"],
     },
 
     // ─── Consultation ─────────────────────────────────────────────
     consultationFee: {
       type: Number,
-      min: [0, 'Consultation fee cannot be negative'],
+      min: [0, "Consultation fee cannot be negative"],
       default: 0,
     },
 
     // ─── Media ───────────────────────────────────────────────────
     profileImage: {
       type: String,
-      default: 'uploads/default-avatar.png',
+      default: "uploads/default-avatar.png",
     },
 
     // ─── Status & Verification ────────────────────────────────────
     status: {
       type: String,
       enum: {
-        values: ['active', 'inactive', 'pending', 'pending_deletion'],
-        message: 'Status must be active, inactive, pending, or pending_deletion',
+        values: ["active", "inactive", "pending", "pending_deletion"],
+        message:
+          "Status must be active, inactive, pending, or pending_deletion",
       },
-      default: 'pending',
+      default: "pending",
     },
 
     isVerified: {
       type: Boolean,
       default: false,
+    },
+
+    // ─── Verification Documents ───────────────────────────────────
+    verification: {
+      slmcCertificateUrl: { type: String, default: null },
+      profilePhotoUrl: { type: String, default: null },
+      submittedAt: { type: Date, default: null },
+      reviewedAt: { type: Date, default: null },
+      reviewedBy: { type: String, default: null },
+      rejectionReason: { type: String, default: null },
+      status: {
+        type: String,
+        enum: ["not_submitted", "pending", "approved", "rejected"],
+        default: "not_submitted",
+      },
     },
 
     // ─── Extended Profile ─────────────────────────────────────────
@@ -159,11 +175,11 @@ const DoctorSchema = new mongoose.Schema(
   },
   {
     timestamps: true, // Adds createdAt and updatedAt automatically
-  }
+  },
 );
 
 // ─── Pre-save Hook: Auto-generate doctorId if not set ─────────────────────────
-DoctorSchema.pre('save', function (next) {
+DoctorSchema.pre("save", function (next) {
   if (!this.doctorId) {
     // Format: DOC-<timestamp>
     this.doctorId = `DOC-${Date.now()}`;
@@ -177,4 +193,4 @@ DoctorSchema.methods.toJSON = function () {
   return obj;
 };
 
-export default mongoose.model('Doctor', DoctorSchema);
+export default mongoose.model("Doctor", DoctorSchema);

@@ -11,6 +11,8 @@ import blockedDaysRouter from "./routes/blockedDaysRoutes.js";
 import timeSlotRouter from "./routes/timeSlotRoutes.js";
 import doctorNotesRouter from "./routes/doctorNotesRoutes.js";
 import consultationRouter from "./routes/consultationRoutes.js";
+import verificationRouter from "./routes/verificationRoutes.js";
+import reviewRouter from "./routes/reviewRoutes.js";
 
 const app = express();
 
@@ -19,15 +21,17 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
+// Routes — review routes BEFORE generic doctorRouter (avoid :id conflicts)
+app.use("/api/doctors", reviewRouter);
 app.use("/api/doctors", doctorRouter);
+app.use("/api/doctors", verificationRouter);
 app.use("/api/doctors", appointmentRouter);
 app.use("/api/doctors", doctorNotesRouter);
 app.use("/api/doctors", patientReportRouter);
-app.use("/api/availability", availabilityRouter);
 app.use("/api/availability/settings", appointmentSettingsRouter);
 app.use("/api/availability/blocked-days", blockedDaysRouter);
 app.use("/api/availability", timeSlotRouter);
+app.use("/api/availability", availabilityRouter);
 app.use("/api/prescriptions", prescriptionRouter);
 app.use("/api/upload", uploadRouter);
 app.use("/api/consultations", consultationRouter);

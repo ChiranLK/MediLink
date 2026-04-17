@@ -9,8 +9,10 @@ import {
   ChevronRight,
 } from "lucide-react";
 import customFetch from "../../utils/customFetch";
+import { useAuth } from "../../context/AuthContext";
 
 const AdminUsers = () => {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -220,13 +222,16 @@ const AdminUsers = () => {
                               <option value="doctor">Doctor</option>
                               <option value="admin">Admin</option>
                             </select>
-                            <button
-                              onClick={() => handleDelete(u._id, u.fullName)}
-                              className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                              title="Delete user"
-                            >
-                              <Trash2 size={16} />
-                            </button>
+                            {(currentUser?.userId || currentUser?.id) !==
+                              u._id && (
+                              <button
+                                onClick={() => handleDelete(u._id, u.fullName)}
+                                className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                title="Delete user"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            )}
                           </>
                         )}
                       </div>

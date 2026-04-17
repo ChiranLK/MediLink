@@ -1,11 +1,18 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   darkMode: "class",
   theme: {
+    container: {
+      center: true,
+      padding: {
+        DEFAULT: "1.25rem",
+        sm: "2rem",
+        lg: "4rem",
+        xl: "5rem",
+        "2xl": "6rem",
+      },
+    },
     extend: {
       colors: {
         primary: "#007A7C",
@@ -48,13 +55,11 @@ export default {
           "50%": { transform: "scale(1.1)", opacity: "0.8" },
         },
         fadeIn: {
-          "from": { opacity: "0", transform: "translateY(20px)" },
-          "to": { opacity: "1", transform: "translateY(0)" },
+          from: { opacity: "0", transform: "translateY(20px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
         },
       },
     },
   },
-  plugins: [
-    require("@tailwindcss/forms"),
-  ],
-}
+  plugins: [require("@tailwindcss/forms")],
+};

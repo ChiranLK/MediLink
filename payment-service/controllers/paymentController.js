@@ -302,7 +302,8 @@ export const refundPayment = async (req, res, next) => {
       throw new PaymentNotFoundError();
     }
 
-    if (payment.userId.toString() !== userId.toString()) {
+    const role = req.user?.role;
+    if (role !== "admin" && payment.userId.toString() !== userId.toString()) {
       throw new InvalidPaymentError("Unauthorized access to this payment");
     }
 
@@ -310,12 +311,22 @@ export const refundPayment = async (req, res, next) => {
       throw new RefundError("Payment already refunded");
     }
 
-    if (payment.status !== "completed") {
-      throw new RefundError("Only completed payments can be refunded");
+    if (payment.status === "completed") {
+      throw new RefundError("Confirmed/completed payments cannot be refunded");
     }
 
-    // Create refund with Stripe
-    const refund = await createRefund(payment.stripeChargeId, amount, reason);
+    if (payment.status !== "pending" && payment.status !== "cancelled") {
+      throw new RefundError(
+        "Only pending or cancelled payments can be refunded",
+      );
+    }
+
+    // For pending/cancelled payments that have a Stripe charge, issue a Stripe refund
+    let stripeRefundId = null;
+    if (payment.stripeChargeId) {
+      const refund = await createRefund(payment.stripeChargeId, amount, reason);
+      stripeRefundId = refund.id;
+    }
 
     // Update payment status
     payment.status = "refunded";
@@ -327,7 +338,7 @@ export const refundPayment = async (req, res, next) => {
       data: {
         paymentId: payment._id,
         refundAmount: amount || payment.amount,
-        stripeRefundId: refund.id,
+        stripeRefundId: stripeRefundId,
       },
     });
   } catch (error) {
@@ -344,6 +355,13 @@ export const refundPayment = async (req, res, next) => {
 // Admin: Platform-wide payment overview
 export const getAdminPaymentOverview = async (req, res, next) => {
   try {
+    const role = req.user?.role;
+    if (role !== "admin") {
+      return res
+        .status(403)
+        .json({ status: "error", message: "Admin access required" });
+    }
+
     const [
       totalPayments,
       completedPayments,

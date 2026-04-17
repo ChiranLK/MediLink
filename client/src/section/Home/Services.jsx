@@ -1,5 +1,13 @@
 import { motion } from "framer-motion";
-import { FiCalendar, FiVideo, FiActivity, FiFileText, FiBookOpen, FiArrowRight, FiLock } from "react-icons/fi";
+import {
+  FiCalendar,
+  FiVideo,
+  FiActivity,
+  FiFileText,
+  FiBookOpen,
+  FiArrowRight,
+  FiLock,
+} from "react-icons/fi";
 import { Link } from "react-router-dom";
 
 const services = [
@@ -65,19 +73,19 @@ const item = {
 
 function Services() {
   return (
-    <section className="py-24 bg-white dark:bg-slate-900 relative overflow-hidden transition-colors duration-300">
+    <section className="py-16 sm:py-20 lg:py-24 bg-white dark:bg-slate-900 relative overflow-hidden transition-colors duration-300">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 right-0 w-[600px] h-[400px] bg-primary/5 rounded-full blur-[120px]" />
       </div>
 
-      <div className="container mx-auto px-5 sm:px-8 lg:px-16 xl:px-20 relative z-10">
+      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-12 relative z-10">
         {/* Section header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="max-w-2xl mb-16"
+          className="max-w-2xl mb-10 lg:mb-16"
         >
           <span className="inline-block text-xs font-bold font-inter tracking-widest text-primary uppercase mb-3">
             What We Offer
@@ -88,7 +96,8 @@ function Services() {
             <span className="text-primary">modern healthcare.</span>
           </h2>
           <p className="text-neutral dark:text-slate-400 font-inter text-base lg:text-lg max-w-xl">
-            A complete, AI-powered suite designed around your comfort and convenience.
+            A complete, AI-powered suite designed around your comfort and
+            convenience.
           </p>
         </motion.div>
 
@@ -112,7 +121,9 @@ function Services() {
                 {/* Hover glow */}
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/0 group-hover:from-primary/3 dark:group-hover:from-primary/10 group-hover:to-primary/0 transition-all duration-500 rounded-3xl" />
 
-                <div className={`w-12 h-12 rounded-2xl ${svc.accent} flex items-center justify-center mb-5 flex-shrink-0`}>
+                <div
+                  className={`w-12 h-12 rounded-2xl ${svc.accent} flex items-center justify-center mb-5 flex-shrink-0`}
+                >
                   <Icon className={`w-5 h-5 ${svc.iconColor}`} />
                 </div>
                 <h3 className="text-lg font-bold font-manrope text-tertiary dark:text-white mb-2">

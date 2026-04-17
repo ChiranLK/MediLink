@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: patient-service
+  namespace: default
+  labels:
+    app: patient-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 3001
+      protocol: TCP
+      name: http
+  selector:
+    app: patient-service
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800

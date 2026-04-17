@@ -150,7 +150,8 @@ const AdminDoctors = () => {
           >
             <div className="flex items-center gap-4 mb-6">
               <div className="w-16 h-16 rounded-full bg-teal-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
-                {selectedDoctor.profileImage ? (
+                {selectedDoctor.profileImage &&
+                selectedDoctor.profileImage.startsWith("http") ? (
                   <img
                     src={selectedDoctor.profileImage}
                     alt=""
@@ -191,15 +192,75 @@ const AdminDoctors = () => {
               <div className="flex justify-between">
                 <span className="text-slate-500">Experience</span>
                 <span className="text-[#112429] dark:text-slate-200 font-medium">
-                  {selectedDoctor.experience || "—"} years
+                  {selectedDoctor.experience != null
+                    ? `${selectedDoctor.experience} years`
+                    : "—"}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Fee</span>
                 <span className="text-[#112429] dark:text-slate-200 font-medium">
-                  Rs. {selectedDoctor.consultationFee || "—"}
+                  {selectedDoctor.consultationFee
+                    ? `Rs. ${selectedDoctor.consultationFee.toLocaleString()}`
+                    : "—"}
                 </span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Hospital</span>
+                <span className="text-[#112429] dark:text-slate-200 font-medium">
+                  {selectedDoctor.hospital || "—"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Qualifications</span>
+                <span className="text-[#112429] dark:text-slate-200 font-medium text-right max-w-[60%]">
+                  {selectedDoctor.qualifications || "—"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Location</span>
+                <span className="text-[#112429] dark:text-slate-200 font-medium">
+                  {selectedDoctor.location || "—"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Languages</span>
+                <span className="text-[#112429] dark:text-slate-200 font-medium">
+                  {selectedDoctor.languages?.length
+                    ? selectedDoctor.languages.join(", ")
+                    : "—"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Verified</span>
+                <span className="text-[#112429] dark:text-slate-200 font-medium">
+                  {selectedDoctor.isVerified ? "Yes" : "No"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Sessions</span>
+                <span className="text-[#112429] dark:text-slate-200 font-medium">
+                  {selectedDoctor.sessionCount ?? 0}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Rating</span>
+                <span className="text-[#112429] dark:text-slate-200 font-medium">
+                  {selectedDoctor.rating?.average > 0
+                    ? `${selectedDoctor.rating.average} ★ (${selectedDoctor.rating.count} reviews)`
+                    : "No ratings yet"}
+                </span>
+              </div>
+              {selectedDoctor.bio && (
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <span className="text-slate-500 text-xs uppercase tracking-wider">
+                    Bio
+                  </span>
+                  <p className="text-[#112429] dark:text-slate-200 text-sm mt-1">
+                    {selectedDoctor.bio}
+                  </p>
+                </div>
+              )}
             </div>
             <button
               onClick={() => setSelectedDoctor(null)}
@@ -233,7 +294,7 @@ const AdminDoctors = () => {
                   <th className="px-6 py-3 font-bold">Specialization</th>
                   <th className="px-6 py-3 font-bold">Email</th>
                   <th className="px-6 py-3 font-bold">Status</th>
-                  <th className="px-6 py-3 font-bold">Fee</th>
+                  <th className="px-6 py-3 font-bold">Rating</th>
                   <th className="px-6 py-3 font-bold text-right">Actions</th>
                 </tr>
               </thead>
@@ -246,7 +307,8 @@ const AdminDoctors = () => {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-full bg-teal-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                          {d.profileImage ? (
+                          {d.profileImage &&
+                          d.profileImage.startsWith("http") ? (
                             <img
                               src={d.profileImage}
                               alt=""
@@ -270,8 +332,19 @@ const AdminDoctors = () => {
                       {d.email || "—"}
                     </td>
                     <td className="px-6 py-4">{statusBadge(d.status)}</td>
-                    <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">
-                      Rs. {d.consultationFee || "—"}
+                    <td className="px-6 py-4 text-sm">
+                      {d.rating?.average > 0 ? (
+                        <span className="font-semibold text-amber-600 dark:text-amber-400">
+                          {d.rating.average} ★
+                          <span className="text-slate-400 dark:text-slate-500 font-normal ml-1">
+                            ({d.rating.count})
+                          </span>
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 dark:text-slate-500">
+                          —
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-2">

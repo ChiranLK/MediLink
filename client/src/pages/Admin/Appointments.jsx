@@ -37,14 +37,16 @@ const AdminAppointments = () => {
   // Client-side filter
   let filtered = appointments;
   if (statusFilter)
-    filtered = filtered.filter((a) => a.status === statusFilter);
+    filtered = filtered.filter(
+      (a) => (a.status || "").toLowerCase() === statusFilter,
+    );
   if (search) {
     const q = search.toLowerCase();
     filtered = filtered.filter(
       (a) =>
         (a.patientName || "").toLowerCase().includes(q) ||
         (a.doctorName || "").toLowerCase().includes(q) ||
-        (a.reason || "").toLowerCase().includes(q),
+        (a.symptoms || a.reason || "").toLowerCase().includes(q),
     );
   }
 
@@ -64,9 +66,10 @@ const AdminAppointments = () => {
       scheduled:
         "bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400",
     };
+    const key = (status || "").toLowerCase();
     return (
       <span
-        className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${styles[status] || "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"}`}
+        className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${styles[key] || "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"}`}
       >
         {status || "unknown"}
       </span>
@@ -168,11 +171,18 @@ const AdminAppointments = () => {
                           : "—"}
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">
-                      {a.time || a.timeSlot || "—"}
+                      {a.time ||
+                        a.timeSlot ||
+                        (a.appointmentDate
+                          ? new Date(a.appointmentDate).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : "—")}
                     </td>
                     <td className="px-6 py-4">{statusBadge(a.status)}</td>
                     <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400 max-w-[200px] truncate">
-                      {a.reason || "—"}
+                      {a.symptoms || a.reason || "—"}
                     </td>
                   </tr>
                 ))}

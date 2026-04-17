@@ -76,11 +76,15 @@ const ActivityFeed = ({ appointments = [] }) => {
         </p>
       )}
 
-      <div className="space-y-6 relative before:absolute before:inset-0 before:ml-[17px] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-slate-100 dark:before:bg-slate-800 pl-2">
-        {recentActivities.map((activity) => (
+      <div className="space-y-6 relative pl-2">
+        {recentActivities.map((activity, idx) => (
           <div key={activity.id} className="relative flex items-start gap-4">
+            {/* Timeline connector line (between icons, not through them) */}
+            {idx < recentActivities.length - 1 && (
+              <div className="absolute left-[15px] top-8 bottom-0 w-px bg-slate-200/60 dark:bg-slate-700/40" />
+            )}
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 z-10 ${activity.iconBg} border-4 border-white dark:border-slate-900`}
+              className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 z-10 ${activity.iconBg} ring-4 ring-white dark:ring-slate-900`}
             >
               <activity.icon
                 size={12}

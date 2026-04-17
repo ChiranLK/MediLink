@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: appointment-service-config
+  namespace: default
+  labels:
+    app: appointment-service
+data:
+  auth-service-url: "http://auth-service:80"
+  doctor-service-url: "http://doctor-service:80"
+  notification-service-url: "http://notification-service:80"

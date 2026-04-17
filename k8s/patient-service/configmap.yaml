@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: patient-service-config
+  namespace: default
+  labels:
+    app: patient-service
+data:
+  client-url: "http://client:80"
+  patient-public-url: "http://patient-service:80"

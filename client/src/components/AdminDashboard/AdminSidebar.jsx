@@ -8,6 +8,8 @@ import {
   Stethoscope,
   Calendar,
   CreditCard,
+  BadgeCheck,
+  MessageSquare,
   Bell,
   LogOut,
   Loader2,
@@ -81,6 +83,8 @@ const AdminSidebar = () => {
     { icon: Stethoscope, label: "Doctors", path: "/admin/doctors" },
     { icon: Calendar, label: "Appointments", path: "/admin/appointments" },
     { icon: CreditCard, label: "Payments", path: "/admin/payments" },
+    { icon: MessageSquare, label: "Messages", path: "/admin/messages" },
+    { icon: BadgeCheck, label: "Verifications", path: "/admin/verifications" },
   ];
 
   const NavButton = ({ item }) => {

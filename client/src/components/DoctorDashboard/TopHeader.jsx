@@ -1,25 +1,31 @@
-import React from 'react';
-import { Bell, Settings, HelpCircle, Menu, Sun, Moon } from 'lucide-react';
-import { useDoctorContext } from '../../context/DoctorContext';
-import { useAuth } from '../../context/AuthContext';
-import { useTheme } from '../../context/ThemeContext';
+import React from "react";
+import { Settings, HelpCircle, Menu, Sun, Moon } from "lucide-react";
+import { useDoctorContext } from "../../context/DoctorContext";
+import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
+import NotificationBell from "../NotificationBell";
 
 const TopHeader = () => {
   const { doctorProfile, toggleSidebar } = useDoctorContext();
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
-  const doctorName = doctorProfile?.name || user?.name || user?.fullName || 'Doctor';
-  const specialization = doctorProfile?.specialization || 'General Practice';
-  const profileImage = doctorProfile?.profileImage?.startsWith('http')
-    ? doctorProfile.profileImage
-    : 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=faces';
+  const doctorName =
+    doctorProfile?.name || user?.name || user?.fullName || "Doctor";
+  const specialization = doctorProfile?.specialization || "General Practice";
+  const profileImage = doctorProfile?.verification?.profilePhotoUrl?.startsWith(
+    "http",
+  )
+    ? doctorProfile.verification.profilePhotoUrl
+    : doctorProfile?.profileImage?.startsWith("http")
+      ? doctorProfile.profileImage
+      : "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=faces";
 
   return (
     <header className="w-full h-20 bg-white dark:bg-slate-950 sticky top-0 z-40 flex items-center justify-between px-4 md:px-8 border-b border-slate-100 dark:border-slate-900 transition-colors duration-300">
       <div className="flex items-center gap-4">
         {/* Mobile Menu Toggle */}
-        <button 
+        <button
           onClick={toggleSidebar}
           className="lg:hidden p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-lg"
         >
@@ -37,12 +43,9 @@ const TopHeader = () => {
             className="p-2 text-slate-700 dark:text-slate-300 hover:text-[#055153] dark:hover:text-teal-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors rounded-full"
             title="Toggle theme"
           >
-            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
           </button>
-          <button className="relative p-2 text-slate-700 dark:text-slate-300 hover:text-[#055153] dark:hover:text-teal-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors rounded-full">
-            <Bell size={22} strokeWidth={2.5} />
-            <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 border-2 border-white dark:border-slate-950 rounded-full"></span>
-          </button>
+          <NotificationBell />
 
           <button className="p-2 text-slate-700 dark:text-slate-300 hover:text-[#055153] dark:hover:text-teal-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors rounded-full hidden md:block">
             <Settings size={22} strokeWidth={2.5} />
@@ -76,4 +79,3 @@ const TopHeader = () => {
 };
 
 export default TopHeader;
-

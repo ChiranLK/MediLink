@@ -98,7 +98,7 @@ export const getPrescriptionsByDoctor = async (req, res, next) => {
     const { page = 1, limit = 20, status } = req.query;
 
     const pageNum = Math.max(1, parseInt(page));
-    const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
+    const limitNum = Math.min(500, Math.max(1, parseInt(limit)));
     const skip = (pageNum - 1) * limitNum;
 
     const filter = { doctorId };

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-gateway-config
+  namespace: default
+  labels:
+    app: api-gateway
+data:
+  auth-service-url: "http://auth-service:80"
+  patient-service-url: "http://patient-service:80"
+  appointment-service-url: "http://appointment-service:80"
+  doctor-service-url: "http://doctor-service:80"
+  payment-service-url: "http://payment-service:80"
+  notification-service-url: "http://notification-service:80"
+  telemedicine-service-url: "http://telemedicine-service:80"
+  ai-service-url: "http://ai-symptom-service:80"

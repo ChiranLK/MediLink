@@ -14,6 +14,7 @@ import {
   Stethoscope,
   Monitor,
   WifiOff,
+  Star,
 } from "lucide-react";
 import customFetch from "../../utils/customFetch";
 import { useAuth } from "../../context/AuthContext";
@@ -78,6 +79,14 @@ const PatientTelemedicine = () => {
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(null); // appointmentId being joined
 
+  // ── Rating state ──────────────────────────────────────────────
+  const [ratingModal, setRatingModal] = useState(null); // appointment object
+  const [ratingValue, setRatingValue] = useState(0);
+  const [ratingHover, setRatingHover] = useState(0);
+  const [ratingComment, setRatingComment] = useState("");
+  const [ratingSubmitting, setRatingSubmitting] = useState(false);
+  const [reviewedAppointments, setReviewedAppointments] = useState({}); // appointmentId -> true
+
   /* ── Fetch patient's appointments ──────────────────────────────── */
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -104,6 +113,27 @@ const PatientTelemedicine = () => {
         }),
       );
       setConsultations(consultMap);
+
+      // 3. For completed consultations, check if already reviewed
+      const reviewMap = {};
+      const completedApts = apts.filter(
+        (apt) =>
+          apt.status === "Completed" &&
+          consultMap[apt._id]?.status === "completed",
+      );
+      await Promise.allSettled(
+        completedApts.map(async (apt) => {
+          try {
+            const { data } = await customFetch.get(
+              `/api/doctors/reviews/check/${apt._id}`,
+            );
+            if (data.exists) reviewMap[apt._id] = true;
+          } catch {
+            // ignore
+          }
+        }),
+      );
+      setReviewedAppointments(reviewMap);
     } catch (err) {
       toast.error("Failed to load appointments");
     } finally {
@@ -150,6 +180,40 @@ const PatientTelemedicine = () => {
   const past = appointments.filter((a) =>
     ["Completed", "Cancelled"].includes(a.status),
   );
+
+  /* ── Open rating modal ─────────────────────────────────────────── */
+  const openRatingModal = (apt) => {
+    setRatingModal(apt);
+    setRatingValue(0);
+    setRatingHover(0);
+    setRatingComment("");
+  };
+
+  /* ── Submit rating ─────────────────────────────────────────────── */
+  const handleSubmitRating = async () => {
+    if (ratingValue === 0) {
+      toast.error("Please select a star rating");
+      return;
+    }
+    setRatingSubmitting(true);
+    try {
+      await customFetch.post("/api/doctors/reviews", {
+        doctorId: ratingModal.doctorId,
+        appointmentId: ratingModal._id,
+        rating: ratingValue,
+        comment: ratingComment,
+        patientName: user?.fullName || user?.name || "Patient",
+      });
+      toast.success("Thank you for your rating!");
+      setReviewedAppointments((prev) => ({ ...prev, [ratingModal._id]: true }));
+      setRatingModal(null);
+    } catch (err) {
+      const msg = err?.response?.data?.message || "Failed to submit rating";
+      toast.error(msg);
+    } finally {
+      setRatingSubmitting(false);
+    }
+  };
 
   return (
     <div className="w-full min-h-full bg-[#F8FAFB] dark:bg-slate-950 p-4 lg:p-8 font-inter transition-colors duration-300">
@@ -420,19 +484,137 @@ const PatientTelemedicine = () => {
                       </p>
                     )}
                   </div>
-                  {session?.meetingLink && (
-                    <button
-                      onClick={() => handleCopyLink(session.meetingLink)}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-[12px] font-bold text-slate-500 hover:text-[#055153] hover:border-[#055153]/30 transition-all shrink-0"
-                    >
-                      <Copy size={12} /> Copy Link
-                    </button>
-                  )}
+                  <div className="flex items-center gap-2 shrink-0">
+                    {/* Rate Doctor button — only for completed video consultations */}
+                    {session?.status === "completed" &&
+                      apt.status === "Completed" &&
+                      !reviewedAppointments[apt._id] && (
+                        <button
+                          onClick={() => openRatingModal(apt)}
+                          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-[12px] font-bold text-amber-700 hover:bg-amber-100 hover:border-amber-300 transition-all"
+                        >
+                          <Star size={12} /> Rate Doctor
+                        </button>
+                      )}
+                    {reviewedAppointments[apt._id] && (
+                      <span className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-[12px] font-bold text-emerald-600">
+                        <CheckCircle2 size={12} /> Rated
+                      </span>
+                    )}
+                    {session?.meetingLink && (
+                      <button
+                        onClick={() => handleCopyLink(session.meetingLink)}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-[12px] font-bold text-slate-500 hover:text-[#055153] hover:border-[#055153]/30 transition-all"
+                      >
+                        <Copy size={12} /> Copy Link
+                      </button>
+                    )}
+                  </div>
                 </div>
               );
             })}
           </div>
         </section>
+      )}
+
+      {/* ── Rating Modal ───────────────────────────────────────── */}
+      {ratingModal && (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          onClick={() => !ratingSubmitting && setRatingModal(null)}
+        >
+          <div
+            className="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full mx-4 p-8 border border-slate-200 dark:border-slate-800 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-amber-50 dark:bg-amber-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Star size={28} className="text-amber-500" />
+              </div>
+              <h3 className="text-[20px] font-black text-[#0D1C2E] dark:text-white font-manrope">
+                Rate Your Doctor
+              </h3>
+              <p className="text-[13px] text-slate-500 mt-1">
+                How was your video consultation for{" "}
+                <strong>
+                  {ratingModal.specialization ||
+                    ratingModal.recommendedSpecialty ||
+                    "your appointment"}
+                </strong>
+                ?
+              </p>
+            </div>
+
+            {/* Star Rating */}
+            <div className="flex justify-center gap-2 mb-6">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setRatingValue(star)}
+                  onMouseEnter={() => setRatingHover(star)}
+                  onMouseLeave={() => setRatingHover(0)}
+                  className="transition-transform hover:scale-110"
+                >
+                  <Star
+                    size={36}
+                    className={`transition-colors ${
+                      star <= (ratingHover || ratingValue)
+                        ? "text-amber-400 fill-amber-400"
+                        : "text-slate-200 dark:text-slate-700"
+                    }`}
+                  />
+                </button>
+              ))}
+            </div>
+            {ratingValue > 0 && (
+              <p className="text-center text-[13px] font-bold text-amber-600 mb-4">
+                {ratingValue === 1
+                  ? "Poor"
+                  : ratingValue === 2
+                    ? "Fair"
+                    : ratingValue === 3
+                      ? "Good"
+                      : ratingValue === 4
+                        ? "Very Good"
+                        : "Excellent"}
+              </p>
+            )}
+
+            {/* Comment */}
+            <textarea
+              value={ratingComment}
+              onChange={(e) => setRatingComment(e.target.value)}
+              placeholder="Share your experience (optional)..."
+              maxLength={500}
+              rows={3}
+              className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-[#112429] dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#055153]/20 resize-none mb-6"
+            />
+
+            {/* Actions */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setRatingModal(null)}
+                disabled={ratingSubmitting}
+                className="flex-1 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmitRating}
+                disabled={ratingSubmitting || ratingValue === 0}
+                className="flex-1 py-3 rounded-2xl bg-[#055153] text-white text-sm font-bold shadow-lg shadow-[#055153]/20 hover:bg-[#044042] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {ratingSubmitting ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <Star size={16} />
+                )}
+                {ratingSubmitting ? "Submitting…" : "Submit Rating"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

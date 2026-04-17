@@ -41,7 +41,7 @@ const AdminDashboard = () => {
       try {
         const [userRes, payRes, apptRes] = await Promise.all([
           customFetch.get("/api/auth/admin/stats").catch(() => null),
-          customFetch.get("/api/payments/admin/overview").catch(() => null),
+          customFetch.get("/api/payment/admin/overview").catch(() => null),
           customFetch.get("/api/appointments").catch(() => null),
         ]);
         if (userRes?.data?.data) setStats(userRes.data.data);

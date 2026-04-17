@@ -3,6 +3,16 @@ import mongoose from "mongoose";
 // Stores delivery history for observability and troubleshooting.
 const notificationSchema = new mongoose.Schema(
   {
+    recipientId: {
+      type: String,
+      index: true,
+      default: null,
+    },
+    recipientRole: {
+      type: String,
+      enum: ["patient", "doctor"],
+      default: "patient",
+    },
     name: {
       type: String,
       trim: true,
@@ -26,8 +36,13 @@ const notificationSchema = new mongoose.Schema(
         "CONSULTATION_COMPLETED",
         "APPOINTMENT_BOOKED_DOCTOR",
         "CONSULTATION_COMPLETED_DOCTOR",
+        "PROFILE_UPDATED",
       ],
       required: true,
+    },
+    read: {
+      type: Boolean,
+      default: false,
     },
     message: {
       type: String,

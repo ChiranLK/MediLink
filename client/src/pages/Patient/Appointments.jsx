@@ -130,7 +130,10 @@ const PatientAppointments = () => {
     } else if (activeTab === "past") {
       filtered = appointments.filter((apt) => {
         const aptDate = new Date(apt.appointmentDate);
-        return aptDate <= now || apt.status === "Completed";
+        return (
+          (aptDate <= now || apt.status === "Completed") &&
+          apt.status !== "Cancelled"
+        );
       });
     } else if (activeTab === "cancelled") {
       filtered = appointments.filter((apt) => apt.status === "Cancelled");
@@ -150,15 +153,15 @@ const PatientAppointments = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case "Confirmed":
-        return "bg-green-100 text-green-700";
+        return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
       case "Pending":
-        return "bg-yellow-100 text-yellow-700";
+        return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
       case "Completed":
-        return "bg-blue-100 text-blue-700";
+        return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
       case "Cancelled":
-        return "bg-red-100 text-red-700";
+        return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
       default:
-        return "bg-gray-100 text-gray-700";
+        return "bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-slate-300";
     }
   };
 
@@ -206,7 +209,6 @@ const PatientAppointments = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9 pr-4 py-2.5 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-[#055153] focus:border-transparent outline-none w-full sm:w-72 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 placeholder-gray-400 dark:placeholder-slate-500"
-            style={{ color: "#1e293b" }}
           />
         </div>
       </div>
@@ -215,10 +217,10 @@ const PatientAppointments = () => {
       {filteredAppointments.length === 0 ? (
         <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800">
           <Calendar size={48} className="mx-auto text-gray-300 mb-4" />
-          <h3 className="text-lg font-bold mb-1" style={{ color: "#475569" }}>
+          <h3 className="text-lg font-bold mb-1 text-slate-500 dark:text-slate-400">
             No appointments
           </h3>
-          <p className="text-sm" style={{ color: "#94a3b8" }}>
+          <p className="text-sm text-slate-400 dark:text-slate-500">
             {activeTab === "upcoming"
               ? "Book your first appointment to get started."
               : `No ${activeTab} appointments.`}
@@ -239,10 +241,7 @@ const PatientAppointments = () => {
                   <div className="flex flex-wrap gap-4">
                     <div className="flex items-center gap-2">
                       <Stethoscope size={16} className="text-[#055153]" />
-                      <span
-                        className="text-sm font-medium"
-                        style={{ color: "#475569" }}
-                      >
+                      <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
                         {appointment.specialization ||
                           appointment.recommendedSpecialty ||
                           "General"}
@@ -250,10 +249,7 @@ const PatientAppointments = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <Calendar size={16} className="text-[#0E8A7F]" />
-                      <span
-                        className="text-sm font-medium"
-                        style={{ color: "#475569" }}
-                      >
+                      <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
                         {format(
                           new Date(appointment.appointmentDate),
                           "MMM dd, yyyy",
@@ -262,10 +258,7 @@ const PatientAppointments = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock size={16} className="text-amber-500" />
-                      <span
-                        className="text-sm font-medium"
-                        style={{ color: "#475569" }}
-                      >
+                      <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
                         {format(
                           new Date(appointment.appointmentDate),
                           "hh:mm a",
@@ -282,21 +275,12 @@ const PatientAppointments = () => {
               </div>
 
               {appointment.symptoms && (
-                <div className="bg-[#F8FAFC] dark:bg-slate-800 p-4 rounded-xl mb-4">
-                  <p className="text-sm" style={{ color: "#475569" }}>
-                    <strong style={{ color: "#1e293b" }}>
+                <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl mb-4 border border-slate-100 dark:border-slate-700/50">
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    <strong className="text-slate-700 dark:text-slate-300">
                       Symptoms/Reason:
                     </strong>{" "}
                     {appointment.symptoms}
-                  </p>
-                </div>
-              )}
-
-              {appointment.aiSuggestions && (
-                <div className="bg-[#F2FDFE] dark:bg-teal-900/20 p-4 rounded-xl mb-4 border-l-4 border-[#055153] dark:border-teal-400">
-                  <p className="text-sm" style={{ color: "#475569" }}>
-                    <strong style={{ color: "#055153" }}>AI Analysis:</strong>{" "}
-                    {appointment.aiSuggestions}
                   </p>
                 </div>
               )}
@@ -322,22 +306,16 @@ const PatientAppointments = () => {
           onClick={() => setShowBookingModal(false)}
         >
           <div
-            className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-8"
+            className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-8 border border-transparent dark:border-slate-800"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2
-              className="text-xl font-extrabold mb-6"
-              style={{ color: "#112429" }}
-            >
+            <h2 className="text-xl font-extrabold mb-6 text-[#112429] dark:text-white">
               Book Appointment
             </h2>
 
             <form onSubmit={handleBookAppointment} className="space-y-5">
               <div>
-                <label
-                  className="block text-[11px] font-bold tracking-widest uppercase mb-2"
-                  style={{ color: "#64748b" }}
-                >
+                <label className="block text-[11px] font-bold tracking-widest uppercase mb-2 text-slate-500 dark:text-slate-400">
                   Select Doctor *
                 </label>
                 <select
@@ -345,8 +323,7 @@ const PatientAppointments = () => {
                   onChange={(e) =>
                     setBookingForm({ ...bookingForm, doctorId: e.target.value })
                   }
-                  className="w-full px-4 py-3 bg-[#F8FAFC] border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#055153] outline-none font-medium"
-                  style={{ color: "#1e293b" }}
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-[#055153] outline-none font-medium text-slate-800 dark:text-slate-200"
                   required
                 >
                   <option value="">Choose a doctor...</option>
@@ -359,10 +336,7 @@ const PatientAppointments = () => {
               </div>
 
               <div>
-                <label
-                  className="block text-[11px] font-bold tracking-widest uppercase mb-2"
-                  style={{ color: "#64748b" }}
-                >
+                <label className="block text-[11px] font-bold tracking-widest uppercase mb-2 text-slate-500 dark:text-slate-400">
                   Date *
                 </label>
                 <input
@@ -375,17 +349,13 @@ const PatientAppointments = () => {
                     })
                   }
                   min={format(new Date(), "yyyy-MM-dd")}
-                  className="w-full px-4 py-3 bg-[#F8FAFC] border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#055153] outline-none font-medium"
-                  style={{ color: "#1e293b" }}
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-[#055153] outline-none font-medium text-slate-800 dark:text-slate-200"
                   required
                 />
               </div>
 
               <div>
-                <label
-                  className="block text-[11px] font-bold tracking-widest uppercase mb-2"
-                  style={{ color: "#64748b" }}
-                >
+                <label className="block text-[11px] font-bold tracking-widest uppercase mb-2 text-slate-500 dark:text-slate-400">
                   Time *
                 </label>
                 <input
@@ -397,17 +367,13 @@ const PatientAppointments = () => {
                       appointmentTime: e.target.value,
                     })
                   }
-                  className="w-full px-4 py-3 bg-[#F8FAFC] border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#055153] outline-none font-medium"
-                  style={{ color: "#1e293b" }}
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-[#055153] outline-none font-medium text-slate-800 dark:text-slate-200"
                   required
                 />
               </div>
 
               <div>
-                <label
-                  className="block text-[11px] font-bold tracking-widest uppercase mb-2"
-                  style={{ color: "#64748b" }}
-                >
+                <label className="block text-[11px] font-bold tracking-widest uppercase mb-2 text-slate-500 dark:text-slate-400">
                   Symptoms / Reason *
                 </label>
                 <textarea
@@ -417,8 +383,7 @@ const PatientAppointments = () => {
                   }
                   placeholder="Describe your symptoms or reason for the appointment..."
                   rows="3"
-                  className="w-full px-4 py-3 bg-[#F8FAFC] border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#055153] outline-none font-medium resize-none placeholder:text-gray-400"
-                  style={{ color: "#1e293b" }}
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-[#055153] outline-none font-medium resize-none placeholder:text-gray-400 dark:placeholder:text-slate-600 text-slate-800 dark:text-slate-200"
                   required
                 />
               </div>
@@ -427,8 +392,7 @@ const PatientAppointments = () => {
                 <button
                   type="button"
                   onClick={() => setShowBookingModal(false)}
-                  className="px-5 py-2.5 border-2 border-gray-200 rounded-xl font-semibold text-sm hover:bg-gray-50 transition"
-                  style={{ color: "#475569" }}
+                  className="px-5 py-2.5 border-2 border-gray-200 dark:border-slate-700 rounded-xl font-semibold text-sm text-slate-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-800 transition"
                 >
                   Cancel
                 </button>

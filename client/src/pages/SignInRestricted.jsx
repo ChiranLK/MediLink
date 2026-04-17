@@ -3,12 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import customFetch from "../utils/customFetch";
 import axios from "axios";
-import { 
-  IoEyeOutline, 
-  IoEyeOffOutline, 
-  IoMailOutline, 
+import {
+  IoEyeOutline,
+  IoEyeOffOutline,
+  IoMailOutline,
   IoLockClosedOutline,
-  IoCheckmarkCircle
+  IoCheckmarkCircle,
 } from "react-icons/io5";
 import { MdErrorOutline } from "react-icons/md";
 import { FaArrowRight } from "react-icons/fa6";
@@ -81,9 +81,9 @@ function SignInRestricted() {
 
     setIsLoading(true);
     try {
-      const response = await customFetch.post('/api/auth/login', {
+      const response = await customFetch.post("/api/auth/login", {
         email,
-        password
+        password,
       });
 
       if (response.data.token) {
@@ -92,31 +92,48 @@ function SignInRestricted() {
 
         // Only allow doctor or admin to login via restricted endpoint
         if (actualRole !== "doctor" && actualRole !== "admin") {
-          toast.error("This login is restricted to doctors and admins only. Please use regular login.");
+          toast.error(
+            "This login is restricted to doctors and admins only. Please use regular login.",
+          );
           setIsLoading(false);
           return;
         }
 
         // Use central login function
         login(userData, token);
-        
+
         toast.success("Login successful!");
 
         // Redirect based on actual DB role
-        switch (actualRole) {
-          case "admin":
-            navigate("/doctor/dashboard");
-            break;
-          case "doctor":
-            navigate("/doctor/dashboard");
-            break;
-          default:
-            navigate("/doctor/dashboard");
+        if (actualRole === "admin") {
+          navigate("/admin/dashboard");
+        } else if (actualRole === "doctor") {
+          // Check verification status - redirect to verification if not verified
+          try {
+            const doctorRes = await axios.get(
+              `${import.meta.env.VITE_API_BASE_URL || "http://localhost:5001"}/api/doctors/user/${userData._id}`,
+              { headers: { Authorization: `Bearer ${token}` } },
+            );
+            const doctor = doctorRes.data.doctor || doctorRes.data;
+            if (
+              !doctor.isVerified &&
+              doctor.verification?.status !== "approved"
+            ) {
+              navigate("/doctor/verification");
+            } else {
+              navigate("/doctor/dashboard");
+            }
+          } catch {
+            navigate("/doctor/verification");
+          }
+        } else {
+          navigate("/doctor/dashboard");
         }
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        const errorMessage = error.response?.data?.msg || "Invalid email or password";
+        const errorMessage =
+          error.response?.data?.msg || "Invalid email or password";
         toast.error(errorMessage);
       } else {
         toast.error("Something went wrong. Please try again.");
@@ -129,7 +146,6 @@ function SignInRestricted() {
 
   return (
     <div className="w-full flex lg:flex-row flex-col min-h-screen bg-[#F8FAFB] dark:bg-slate-900">
-      
       {/* ── LEFT SIDE: Hero Section ── */}
       <div className="lg:w-1/2 w-full relative hidden lg:flex flex-col justify-center overflow-hidden">
         {/* Background Image with Teal Overlay */}
@@ -158,11 +174,12 @@ function SignInRestricted() {
             <h1 className="text-white text-4xl xl:text-5xl font-black font-manrope leading-[1.1] tracking-tight mb-16 drop-shadow-lg">
               Healthcare professionals portal.
             </h1>
-            
+
             {/* Quote Block */}
             <div className="border-l-4 border-white/50 pl-6 mt-12 drop-shadow-md">
               <p className="text-white text-xl xl:text-2xl font-serif italic leading-relaxed mb-4">
-                "Manage your practice efficiently with MediLink Cloud - powering healthcare professionals worldwide."
+                "Manage your practice efficiently with MediLink Cloud - powering
+                healthcare professionals worldwide."
               </p>
               <p className="text-white/80 text-sm font-inter uppercase tracking-widest font-semibold flex items-center gap-2 drop-shadow-sm">
                 <span className="w-4 h-[1px] bg-white/70 inline-block"></span>
@@ -176,11 +193,14 @@ function SignInRestricted() {
       {/* ── RIGHT SIDE: Form Section ── */}
       <div className="lg:w-1/2 w-full flex flex-col justify-center items-center py-6 px-4 sm:px-10 lg:px-12 relative bg-[#F8FAFB] dark:bg-slate-900 min-h-screen">
         <div className="w-full max-w-[460px] bg-white/70 dark:bg-slate-800/40 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-700/50 px-6 py-6 sm:px-8 sm:py-8 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-black/20">
-          
           {/* Titles */}
           <div className="mb-4">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#112429] dark:text-white font-manrope mb-1">Professional Login</h2>
-            <p className="text-[#64748B] dark:text-slate-400 text-xs sm:text-sm font-inter">Sign in to your professional dashboard</p>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#112429] dark:text-white font-manrope mb-1">
+              Professional Login
+            </h2>
+            <p className="text-[#64748B] dark:text-slate-400 text-xs sm:text-sm font-inter">
+              Sign in to your professional dashboard
+            </p>
           </div>
 
           <div className="space-y-5">
@@ -270,7 +290,10 @@ function SignInRestricted() {
                 type="checkbox"
                 className="w-4 h-4 text-[#055153] dark:text-primary border-[#CBD5E1] dark:border-slate-600 rounded focus:ring-[#055153] dark:focus:ring-primary dark:bg-slate-800 cursor-pointer"
               />
-              <label htmlFor="remember" className="ml-2.5 block text-sm text-[#475569] dark:text-slate-300 font-medium font-inter cursor-pointer">
+              <label
+                htmlFor="remember"
+                className="ml-2.5 block text-sm text-[#475569] dark:text-slate-300 font-medium font-inter cursor-pointer"
+              >
                 Keep me signed in
               </label>
             </div>
@@ -284,8 +307,20 @@ function SignInRestricted() {
               {isLoading ? (
                 <span className="flex items-center gap-2">
                   <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
                   </svg>
                   Signing in...
                 </span>
@@ -300,7 +335,10 @@ function SignInRestricted() {
           {/* Register Link */}
           <p className="text-center text-[#475569] dark:text-slate-400 text-sm font-medium mt-6 font-inter">
             Don't have an account?{" "}
-            <Link to="/signup/restricted" className="text-[#055153] dark:text-primary font-bold hover:underline transition-colors block mx-auto py-1">
+            <Link
+              to="/signup/restricted"
+              className="text-[#055153] dark:text-primary font-bold hover:underline transition-colors block mx-auto py-1"
+            >
               Register Now
             </Link>
           </p>

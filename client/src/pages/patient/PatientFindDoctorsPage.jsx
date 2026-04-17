@@ -132,7 +132,7 @@ function DoctorCard({ doctor, onBook }) {
         <div className="flex gap-4">
           <DoctorAvatar
             name={doctor.name}
-            image={doctor.profileImage}
+            image={doctor.verification?.profilePhotoUrl || doctor.profileImage}
             size="md"
           />
 
@@ -503,7 +503,10 @@ export default function PatientFindDoctorsPage() {
             <div className="flex items-center gap-4 rounded-xl bg-gradient-to-r from-slate-50 to-teal-50/50 p-4">
               <DoctorAvatar
                 name={selectedDoctor.name}
-                image={selectedDoctor.profileImage}
+                image={
+                  selectedDoctor.verification?.profilePhotoUrl ||
+                  selectedDoctor.profileImage
+                }
                 size="lg"
               />
               <div>

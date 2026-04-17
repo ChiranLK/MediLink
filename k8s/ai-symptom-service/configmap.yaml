@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ai-symptom-service-config
+  namespace: default
+  labels:
+    app: ai-symptom-service
+data:
+  auth-service-url: "http://auth-service:80"

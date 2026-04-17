@@ -179,6 +179,8 @@ export const updateConsultationStatus = async (req, res, next) => {
           phone: appt.contactPhone,
           name: appt.patientName,
           type: "CONSULTATION_COMPLETED",
+          recipientId: appt.patientId,
+          recipientRole: "patient",
         });
       }
 
@@ -194,6 +196,8 @@ export const updateConsultationStatus = async (req, res, next) => {
             name: cleanDoctorName(doctor.name),
             type: "CONSULTATION_COMPLETED_DOCTOR",
             patientName: appt?.patientName,
+            recipientId: String(session.doctorId),
+            recipientRole: "doctor",
           });
         }
       } catch {

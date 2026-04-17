@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: telemedicine-service
+  namespace: default
+  labels:
+    app: telemedicine-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 3004
+      protocol: TCP
+      name: http
+  selector:
+    app: telemedicine-service
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: doctor-service-config
+  namespace: default
+  labels:
+    app: doctor-service
+data:
+  appointment-service-url: "http://appointment-service:80"
+  patient-service-url: "http://patient-service:80"
+  notification-service-url: "http://notification-service:80"

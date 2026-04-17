@@ -1,17 +1,17 @@
-import TimeSlot from '../models/TimeSlot.js';
-import AppointmentSettings from '../models/AppointmentSettings.js';
-import BlockedDay from '../models/BlockedDay.js';
-import { StatusCodes } from 'http-status-codes';
-import { NotFoundError, BadRequestError } from '../errors/customErrors.js';
-import Doctor from '../models/Doctor.js';
+import TimeSlot from "../models/TimeSlot.js";
+import AppointmentSettings from "../models/AppointmentSettings.js";
+import BlockedDay from "../models/BlockedDay.js";
+import { StatusCodes } from "http-status-codes";
+import { NotFoundError, BadRequestError } from "../errors/customErrors.js";
+import Doctor from "../models/Doctor.js";
 
 // Helper: Convert time string to minutes
 const timeToMinutes = (timeStr) => {
-  const [time, period] = timeStr.split(' ');
-  const [hours, minutes] = time.split(':').map(Number);
+  const [time, period] = timeStr.split(" ");
+  const [hours, minutes] = time.split(":").map(Number);
   let totalMinutes = hours * 60 + minutes;
-  if (period === 'PM' && hours !== 12) totalMinutes += 12 * 60;
-  if (period === 'AM' && hours === 12) totalMinutes -= 12 * 60;
+  if (period === "PM" && hours !== 12) totalMinutes += 12 * 60;
+  if (period === "AM" && hours === 12) totalMinutes -= 12 * 60;
   return totalMinutes;
 };
 
@@ -19,21 +19,29 @@ const timeToMinutes = (timeStr) => {
 const minutesToTime = (minutes) => {
   let hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
-  const period = hours >= 12 ? 'PM' : 'AM';
+  const period = hours >= 12 ? "PM" : "AM";
   if (hours > 12) hours -= 12;
   if (hours === 0) hours = 12;
-  return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')} ${period}`;
+  return `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")} ${period}`;
 };
 
 // Helper: Get day name from date
 const getDayName = (date) => {
-  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const days = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
   return days[date.getDay()];
 };
 
 // Helper: Format date to YYYY-MM-DD
 const formatDate = (date) => {
-  return date.toISOString().split('T')[0];
+  return date.toISOString().split("T")[0];
 };
 
 // @desc    Get time slots for a specific date
@@ -43,7 +51,9 @@ export const getTimeSlotsByDate = async (req, res, next) => {
   try {
     const { doctorId, date } = req.params;
 
-    const slots = await TimeSlot.find({ doctorId, date }).sort({ startTime: 1 });
+    const slots = await TimeSlot.find({ doctorId, date }).sort({
+      startTime: 1,
+    });
 
     res.status(StatusCodes.OK).json({
       success: true,
@@ -90,18 +100,22 @@ export const getWeekView = async (req, res, next) => {
     const blockedDays = await BlockedDay.find({
       doctorId,
       isActive: true,
-      $or: [
-        { startDate: { $lte: weekEnd }, endDate: { $gte: weekStart } },
-      ],
+      $or: [{ startDate: { $lte: weekEnd }, endDate: { $gte: weekStart } }],
     });
 
     // Generate week data
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     const weekData = [];
     for (let i = 0; i < 7; i++) {
       const currentDate = new Date(weekStart);
       currentDate.setDate(currentDate.getDate() + i);
       const dateStr = formatDate(currentDate);
       const dayName = getDayName(currentDate);
+
+      // Check if this date is in the past
+      const isPast = currentDate < today;
 
       // Check if day is blocked
       const isBlocked = blockedDays.some((block) => {
@@ -112,13 +126,36 @@ export const getWeekView = async (req, res, next) => {
 
       // Get slots for this day
       let slots = [];
-      if (!isBlocked) {
-        slots = await TimeSlot.find({ doctorId, date: dateStr }).sort({ startTime: 1 });
+      if (!isBlocked && !isPast) {
+        slots = await TimeSlot.find({ doctorId, date: dateStr }).sort({
+          startTime: 1,
+        });
 
         // If no slots exist, generate them based on settings
-        if (slots.length === 0 && settings.workingDays.includes(currentDate.getDay())) {
+        if (
+          slots.length === 0 &&
+          settings.workingDays.includes(currentDate.getDay())
+        ) {
           slots = await generateTimeSlots(doctorId, dateStr, dayName, settings);
         }
+
+        // For today, filter out time slots that have already passed
+        const isToday = currentDate.getTime() === today.getTime();
+        if (isToday && slots.length > 0) {
+          const now = new Date();
+          const currentMinutes = now.getHours() * 60 + now.getMinutes();
+          slots = slots.filter((slot) => {
+            const slotMinutes = timeToMinutes(slot.startTime);
+            return slotMinutes > currentMinutes;
+          });
+        }
+      } else if (isPast) {
+        // For past dates, only return booked slots (for history), not available ones
+        slots = await TimeSlot.find({
+          doctorId,
+          date: dateStr,
+          status: "booked",
+        }).sort({ startTime: 1 });
       }
 
       weekData.push({
@@ -126,6 +163,7 @@ export const getWeekView = async (req, res, next) => {
         day: dayName,
         dayNumber: currentDate.getDate(),
         isBlocked,
+        isPast,
         isWorkingDay: settings.workingDays.includes(currentDate.getDay()),
         slots,
       });
@@ -164,7 +202,10 @@ const generateTimeSlots = async (doctorId, date, day, settings) => {
   let currentTime = startMinutes;
   let slotCount = 0;
 
-  while (currentTime + slotDuration <= endMinutes && slotCount < settings.maxAppointmentsPerDay) {
+  while (
+    currentTime + slotDuration <= endMinutes &&
+    slotCount < settings.maxAppointmentsPerDay
+  ) {
     const startTimeStr = minutesToTime(currentTime);
     const endTimeStr = minutesToTime(currentTime + slotDuration);
 
@@ -174,7 +215,7 @@ const generateTimeSlots = async (doctorId, date, day, settings) => {
       day,
       startTime: startTimeStr,
       endTime: endTimeStr,
-      status: 'available',
+      status: "available",
     });
 
     slots.push(slot);
@@ -190,10 +231,19 @@ const generateTimeSlots = async (doctorId, date, day, settings) => {
 // @access  Doctor/Admin
 export const createTimeSlot = async (req, res, next) => {
   try {
-    const { doctorId, date, startTime, endTime, status = 'available', notes } = req.body;
+    const {
+      doctorId,
+      date,
+      startTime,
+      endTime,
+      status = "available",
+      notes,
+    } = req.body;
 
     if (!doctorId || !date || !startTime || !endTime) {
-      throw new BadRequestError('Required fields: doctorId, date, startTime, endTime');
+      throw new BadRequestError(
+        "Required fields: doctorId, date, startTime, endTime",
+      );
     }
 
     // Verify doctor exists
@@ -215,13 +265,11 @@ export const createTimeSlot = async (req, res, next) => {
     const existingSlot = await TimeSlot.findOne({
       doctorId,
       date,
-      $or: [
-        { startTime: { $lt: endTime }, endTime: { $gt: startTime } },
-      ],
+      $or: [{ startTime: { $lt: endTime }, endTime: { $gt: startTime } }],
     });
 
     if (existingSlot) {
-      throw new BadRequestError('Time slot overlaps with existing slot');
+      throw new BadRequestError("Time slot overlaps with existing slot");
     }
 
     const slot = await TimeSlot.create({
@@ -236,7 +284,7 @@ export const createTimeSlot = async (req, res, next) => {
 
     res.status(StatusCodes.CREATED).json({
       success: true,
-      message: 'Time slot created successfully',
+      message: "Time slot created successfully",
       data: slot,
     });
   } catch (error) {
@@ -250,7 +298,14 @@ export const createTimeSlot = async (req, res, next) => {
 export const updateTimeSlot = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { status, notes, appointmentId, patientId, patientName, appointmentType } = req.body;
+    const {
+      status,
+      notes,
+      appointmentId,
+      patientId,
+      patientName,
+      appointmentType,
+    } = req.body;
 
     const slot = await TimeSlot.findById(id);
     if (!slot) {
@@ -263,17 +318,17 @@ export const updateTimeSlot = async (req, res, next) => {
     if (appointmentId !== undefined) updateData.appointmentId = appointmentId;
     if (patientId !== undefined) updateData.patientId = patientId;
     if (patientName !== undefined) updateData.patientName = patientName;
-    if (appointmentType !== undefined) updateData.appointmentType = appointmentType;
+    if (appointmentType !== undefined)
+      updateData.appointmentType = appointmentType;
 
-    const updatedSlot = await TimeSlot.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true, runValidators: true }
-    );
+    const updatedSlot = await TimeSlot.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
 
     res.status(StatusCodes.OK).json({
       success: true,
-      message: 'Time slot updated successfully',
+      message: "Time slot updated successfully",
       data: updatedSlot,
     });
   } catch (error) {
@@ -294,15 +349,17 @@ export const deleteTimeSlot = async (req, res, next) => {
     }
 
     // Don't allow deletion of booked slots
-    if (slot.status === 'booked') {
-      throw new BadRequestError('Cannot delete a booked time slot. Cancel the appointment first.');
+    if (slot.status === "booked") {
+      throw new BadRequestError(
+        "Cannot delete a booked time slot. Cancel the appointment first.",
+      );
     }
 
     await TimeSlot.findByIdAndDelete(id);
 
     res.status(StatusCodes.OK).json({
       success: true,
-      message: 'Time slot deleted successfully',
+      message: "Time slot deleted successfully",
       data: {},
     });
   } catch (error) {
@@ -319,7 +376,9 @@ export const bookTimeSlot = async (req, res, next) => {
     const { appointmentId, patientId, patientName, appointmentType } = req.body;
 
     if (!appointmentId || !patientId || !patientName) {
-      throw new BadRequestError('Required fields: appointmentId, patientId, patientName');
+      throw new BadRequestError(
+        "Required fields: appointmentId, patientId, patientName",
+      );
     }
 
     const slot = await TimeSlot.findById(id);
@@ -327,25 +386,27 @@ export const bookTimeSlot = async (req, res, next) => {
       throw new NotFoundError(`No time slot found with id: ${id}`);
     }
 
-    if (slot.status !== 'available') {
-      throw new BadRequestError(`Time slot is ${slot.status}, cannot be booked`);
+    if (slot.status !== "available") {
+      throw new BadRequestError(
+        `Time slot is ${slot.status}, cannot be booked`,
+      );
     }
 
     const updatedSlot = await TimeSlot.findByIdAndUpdate(
       id,
       {
-        status: 'booked',
+        status: "booked",
         appointmentId,
         patientId,
         patientName,
-        appointmentType: appointmentType || 'General Consultation',
+        appointmentType: appointmentType || "General Consultation",
       },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     res.status(StatusCodes.OK).json({
       success: true,
-      message: 'Time slot booked successfully',
+      message: "Time slot booked successfully",
       data: updatedSlot,
     });
   } catch (error) {
@@ -365,25 +426,25 @@ export const cancelBooking = async (req, res, next) => {
       throw new NotFoundError(`No time slot found with id: ${id}`);
     }
 
-    if (slot.status !== 'booked') {
-      throw new BadRequestError('Time slot is not booked');
+    if (slot.status !== "booked") {
+      throw new BadRequestError("Time slot is not booked");
     }
 
     const updatedSlot = await TimeSlot.findByIdAndUpdate(
       id,
       {
-        status: 'available',
+        status: "available",
         appointmentId: null,
         patientId: null,
         patientName: null,
         appointmentType: null,
       },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     res.status(StatusCodes.OK).json({
       success: true,
-      message: 'Booking cancelled successfully',
+      message: "Booking cancelled successfully",
       data: updatedSlot,
     });
   } catch (error) {
@@ -404,22 +465,24 @@ export const blockTimeSlot = async (req, res, next) => {
       throw new NotFoundError(`No time slot found with id: ${id}`);
     }
 
-    if (slot.status === 'booked') {
-      throw new BadRequestError('Cannot block a booked time slot. Cancel the appointment first.');
+    if (slot.status === "booked") {
+      throw new BadRequestError(
+        "Cannot block a booked time slot. Cancel the appointment first.",
+      );
     }
 
     const updatedSlot = await TimeSlot.findByIdAndUpdate(
       id,
       {
-        status: 'blocked',
-        notes: notes || 'Blocked by doctor',
+        status: "blocked",
+        notes: notes || "Blocked by doctor",
       },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     res.status(StatusCodes.OK).json({
       success: true,
-      message: 'Time slot blocked successfully',
+      message: "Time slot blocked successfully",
       data: updatedSlot,
     });
   } catch (error) {
@@ -439,22 +502,22 @@ export const unblockTimeSlot = async (req, res, next) => {
       throw new NotFoundError(`No time slot found with id: ${id}`);
     }
 
-    if (slot.status !== 'blocked') {
-      throw new BadRequestError('Time slot is not blocked');
+    if (slot.status !== "blocked") {
+      throw new BadRequestError("Time slot is not blocked");
     }
 
     const updatedSlot = await TimeSlot.findByIdAndUpdate(
       id,
       {
-        status: 'available',
+        status: "available",
         notes: null,
       },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     res.status(StatusCodes.OK).json({
       success: true,
-      message: 'Time slot unblocked successfully',
+      message: "Time slot unblocked successfully",
       data: updatedSlot,
     });
   } catch (error) {

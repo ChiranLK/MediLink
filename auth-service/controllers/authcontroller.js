@@ -330,15 +330,13 @@ export const getAllUsers = async (req, res) => {
       .limit(Number(limit)),
     Patient.countDocuments(filter),
   ]);
-  res
-    .status(StatusCodes.OK)
-    .json({
-      success: true,
-      data: users,
-      total,
-      page: Number(page),
-      pages: Math.ceil(total / Number(limit)),
-    });
+  res.status(StatusCodes.OK).json({
+    success: true,
+    data: users,
+    total,
+    page: Number(page),
+    pages: Math.ceil(total / Number(limit)),
+  });
 };
 
 // ── Admin: Get platform stats ───────────────────────────────────────────────
@@ -351,12 +349,10 @@ export const getAdminStats = async (req, res) => {
       Patient.countDocuments({ role: "admin" }),
       Patient.find().select("-password").sort({ createdAt: -1 }).limit(5),
     ]);
-  res
-    .status(StatusCodes.OK)
-    .json({
-      success: true,
-      data: { totalUsers, patients, doctors, admins, recentUsers },
-    });
+  res.status(StatusCodes.OK).json({
+    success: true,
+    data: { totalUsers, patients, doctors, admins, recentUsers },
+  });
 };
 
 // ── Admin: Update user role ─────────────────────────────────────────────────
@@ -378,6 +374,9 @@ export const updateUserRole = async (req, res) => {
 // ── Admin: Delete user ──────────────────────────────────────────────────────
 export const deleteUser = async (req, res) => {
   const { id } = req.params;
+  if (id === req.patient.userId) {
+    throw new BadRequestError("You cannot delete your own account");
+  }
   const user = await Patient.findByIdAndDelete(id);
   if (!user) throw new NotFoundError("User not found");
   res.status(StatusCodes.OK).json({ success: true, msg: "User deleted" });

@@ -3,7 +3,6 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
   Calendar,
   Users,
-  Activity,
   CreditCard,
   User,
   LogOut,
@@ -91,9 +90,11 @@ const PatientLayout = () => {
     <div className="w-[260px] h-screen bg-[#F8FAFB] dark:bg-slate-900 flex flex-col pt-6 font-inter border-r border-[#E2E8F0] dark:border-slate-800 transition-colors duration-300">
       {/* Brand */}
       <div className="px-6 mb-10 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-[#055153]/10 dark:bg-teal-400/10 flex items-center justify-center">
-          <Activity size={22} className="text-[#055153] dark:text-teal-400" />
-        </div>
+        <img
+          src="/favicon.png"
+          alt="MediLink Logo"
+          className="w-10 h-10 object-contain drop-shadow-md bg-white/10 dark:bg-slate-800/50 rounded-xl p-1"
+        />
         <div className="flex flex-col">
           <span className="font-extrabold text-[#055153] dark:text-teal-400 text-[18px] tracking-tight leading-tight uppercase font-manrope">
             MediLink

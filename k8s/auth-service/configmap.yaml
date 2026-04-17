@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth-service-config
+  namespace: default
+  labels:
+    app: auth-service
+data:
+  client-url: "http://client:80"
