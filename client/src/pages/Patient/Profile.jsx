@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import { patientApi } from '../../patient/services/patientApi';
-import toast from 'react-hot-toast';
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { patientApi } from "../../patient/services/patientApi";
+import toast from "react-hot-toast";
 import {
   User,
   Phone,
@@ -15,7 +15,7 @@ import {
   Calendar,
   FileText,
   ClipboardList,
-} from 'lucide-react';
+} from "lucide-react";
 
 const PatientProfile = () => {
   const { user } = useAuth();
@@ -24,13 +24,13 @@ const PatientProfile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    age: '',
-    gender: '',
-    phone: '',
-    address: '',
-    bloodGroup: '',
-    medicalHistory: '',
+    name: "",
+    age: "",
+    gender: "",
+    phone: "",
+    address: "",
+    bloodGroup: "",
+    medicalHistory: "",
   });
 
   useEffect(() => {
@@ -49,22 +49,22 @@ const PatientProfile = () => {
         } else {
           setProfile(null);
           setFormData({
-            name: user.name || user.fullName || '',
-            age: '',
-            gender: '',
-            phone: '',
-            address: '',
-            bloodGroup: '',
-            medicalHistory: '',
+            name: user.name || user.fullName || "",
+            age: "",
+            gender: "",
+            phone: "",
+            address: "",
+            bloodGroup: "",
+            medicalHistory: "",
           });
         }
       }
     } catch (error) {
-      console.log('Profile not found, initialize new');
+      console.log("Profile not found, initialize new");
       setProfile(null);
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        name: user?.name || user?.fullName || '',
+        name: user?.name || user?.fullName || "",
       }));
     } finally {
       setLoading(false);
@@ -73,14 +73,20 @@ const PatientProfile = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSave = async () => {
     try {
       setSaving(true);
-      if (!formData.name || !formData.age || !formData.gender || !formData.phone || !formData.address) {
-        toast.error('Please fill all required fields');
+      if (
+        !formData.name ||
+        !formData.age ||
+        !formData.gender ||
+        !formData.phone ||
+        !formData.address
+      ) {
+        toast.error("Please fill all required fields");
         return;
       }
 
@@ -90,24 +96,37 @@ const PatientProfile = () => {
         response = await patientApi.updatePatientProfile(uid, formData);
       } else {
         const uid = user?.userId || user?.id;
-        response = await patientApi.createPatientProfile({ userId: uid, ...formData });
+        response = await patientApi.createPatientProfile({
+          userId: uid,
+          ...formData,
+        });
       }
 
       if (response.success || response.data) {
         setProfile(response.data);
         setIsEditing(false);
-        toast.success(profile ? 'Profile updated successfully' : 'Profile created successfully');
+        toast.success(
+          profile
+            ? "Profile updated successfully"
+            : "Profile created successfully",
+        );
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to save profile');
+      toast.error(error.response?.data?.message || "Failed to save profile");
     } finally {
       setSaving(false);
     }
   };
 
-  const displayName = formData.name || user?.name || user?.fullName || 'Patient';
-  const patientId = (user?.userId || user?.id) || '';
-  const initials = displayName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  const displayName =
+    formData.name || user?.name || user?.fullName || "Patient";
+  const patientId = user?.userId || user?.id || "";
+  const initials = displayName
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
   if (loading) {
     return (
@@ -118,7 +137,7 @@ const PatientProfile = () => {
             <div className="h-40 bg-gray-200" />
             <div className="p-8 space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
-                {[1, 2, 3, 4, 5, 6].map(i => (
+                {[1, 2, 3, 4, 5, 6].map((i) => (
                   <div key={i} className="h-24 bg-gray-100 rounded-2xl" />
                 ))}
               </div>
@@ -130,14 +149,14 @@ const PatientProfile = () => {
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-6">
+    <div className="w-full max-w-4xl mx-auto p-4 md:p-6 bg-[#F8FAFB] dark:bg-slate-950 min-h-screen transition-colors duration-300">
       {/* Page Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight" style={{ color: '#112429' }}>
+          <h1 className="text-3xl font-extrabold tracking-tight text-[#112429] dark:text-white">
             My Profile
           </h1>
-          <p className="text-sm mt-1" style={{ color: '#64748b' }}>
+          <p className="text-sm mt-1 text-slate-500 dark:text-slate-400">
             Manage your personal and medical information
           </p>
         </div>
@@ -153,8 +172,7 @@ const PatientProfile = () => {
       </div>
 
       {/* Main Card */}
-      <div className="bg-white rounded-[28px] shadow-sm border border-gray-100 overflow-hidden">
-
+      <div className="bg-white dark:bg-slate-900 rounded-[28px] shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden">
         {/* Profile Header Banner */}
         <div className="relative bg-gradient-to-r from-[#055153] to-[#0E8A7F] px-8 py-10 overflow-hidden">
           <div className="absolute -top-16 -right-16 w-56 h-56 bg-white/5 rounded-full blur-2xl" />
@@ -162,10 +180,14 @@ const PatientProfile = () => {
 
           <div className="flex items-center gap-5 relative z-10">
             <div className="w-20 h-20 rounded-2xl bg-white/15 backdrop-blur-sm border-2 border-white/25 flex items-center justify-center shadow-xl">
-              <span className="text-2xl font-extrabold text-white">{initials}</span>
+              <span className="text-2xl font-extrabold text-white">
+                {initials}
+              </span>
             </div>
             <div>
-              <h2 className="text-2xl font-extrabold text-white mb-1">{displayName}</h2>
+              <h2 className="text-2xl font-extrabold text-white mb-1">
+                {displayName}
+              </h2>
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1.5 bg-white/15 backdrop-blur-sm px-3 py-1 rounded-full">
                   <Shield size={12} className="text-white/80" />
@@ -176,7 +198,9 @@ const PatientProfile = () => {
                 {formData.bloodGroup && (
                   <div className="flex items-center gap-1.5 bg-white/15 backdrop-blur-sm px-3 py-1 rounded-full">
                     <Droplets size={12} className="text-red-300" />
-                    <span className="text-xs font-semibold text-white/90">{formData.bloodGroup}</span>
+                    <span className="text-xs font-semibold text-white/90">
+                      {formData.bloodGroup}
+                    </span>
                   </div>
                 )}
               </div>
@@ -191,7 +215,10 @@ const PatientProfile = () => {
               formData={formData}
               onChange={handleInputChange}
               onSave={handleSave}
-              onCancel={() => { setIsEditing(false); setFormData(profile || { name: user?.name || '' }); }}
+              onCancel={() => {
+                setIsEditing(false);
+                setFormData(profile || { name: user?.name || "" });
+              }}
               saving={saving}
             />
           ) : (
@@ -205,15 +232,19 @@ const PatientProfile = () => {
 
 /* ─── View Mode ─────────────────────────────────────────────────── */
 const ViewMode = ({ formData, user }) => {
-  const displayName = formData.name || user?.name || user?.fullName || '';
+  const displayName = formData.name || user?.name || user?.fullName || "";
 
   const fields = [
-    { icon: User, label: 'Full Name', value: displayName },
-    { icon: Calendar, label: 'Age', value: formData.age ? `${formData.age} years` : null },
-    { icon: User, label: 'Gender', value: formData.gender },
-    { icon: Droplets, label: 'Blood Group', value: formData.bloodGroup },
-    { icon: Phone, label: 'Phone', value: formData.phone },
-    { icon: MapPin, label: 'Address', value: formData.address },
+    { icon: User, label: "Full Name", value: displayName },
+    {
+      icon: Calendar,
+      label: "Age",
+      value: formData.age ? `${formData.age} years` : null,
+    },
+    { icon: User, label: "Gender", value: formData.gender },
+    { icon: Droplets, label: "Blood Group", value: formData.bloodGroup },
+    { icon: Phone, label: "Phone", value: formData.phone },
+    { icon: MapPin, label: "Address", value: formData.address },
   ];
 
   return (
@@ -223,17 +254,19 @@ const ViewMode = ({ formData, user }) => {
         {fields.map(({ icon: Icon, label, value }) => (
           <div
             key={label}
-            className="group flex items-start gap-4 p-4 rounded-2xl border border-gray-100 hover:border-[#055153]/20 hover:bg-[#F2FDFE] transition-all duration-200"
+            className="group flex items-start gap-4 p-4 rounded-2xl border border-gray-100 dark:border-slate-800 hover:border-[#055153]/20 dark:hover:border-teal-400/20 hover:bg-[#F2FDFE] dark:hover:bg-slate-800/50 transition-all duration-200"
           >
-            <div className="w-10 h-10 rounded-xl bg-[#EEF5F9] flex items-center justify-center flex-shrink-0 group-hover:bg-[#055153]/10 transition-colors">
+            <div className="w-10 h-10 rounded-xl bg-[#EEF5F9] dark:bg-slate-800 flex items-center justify-center flex-shrink-0 group-hover:bg-[#055153]/10 dark:group-hover:bg-teal-900/30 transition-colors">
               <Icon size={18} className="text-[#055153]" />
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-bold tracking-widest uppercase mb-1" style={{ color: '#94a3b8' }}>
+              <p className="text-[11px] font-bold tracking-widest uppercase mb-1 text-slate-400 dark:text-slate-500">
                 {label}
               </p>
-              <p className="text-[15px] font-semibold truncate" style={{ color: value ? '#1e293b' : '#cbd5e1' }}>
-                {value || 'Not specified'}
+              <p
+                className={`text-[15px] font-semibold truncate ${value ? "text-[#1e293b] dark:text-slate-100" : "text-slate-300 dark:text-slate-600"}`}
+              >
+                {value || "Not specified"}
               </p>
             </div>
           </div>
@@ -241,21 +274,26 @@ const ViewMode = ({ formData, user }) => {
       </div>
 
       {/* Medical History Section */}
-      <div className="rounded-2xl border border-gray-100 overflow-hidden">
-        <div className="flex items-center gap-3 px-6 py-4 bg-[#F8FAFC] border-b border-gray-100">
+      <div className="rounded-2xl border border-gray-100 dark:border-slate-800 overflow-hidden">
+        <div className="flex items-center gap-3 px-6 py-4 bg-[#F8FAFC] dark:bg-slate-800/50 border-b border-gray-100 dark:border-slate-700">
           <div className="w-8 h-8 rounded-lg bg-[#055153]/10 flex items-center justify-center">
             <ClipboardList size={16} className="text-[#055153]" />
           </div>
-          <h3 className="font-bold text-sm" style={{ color: '#1e293b' }}>Medical History</h3>
+          <h3 className="font-bold text-sm" style={{ color: "#1e293b" }}>
+            Medical History
+          </h3>
         </div>
         <div className="px-6 py-5">
           {formData.medicalHistory ? (
-            <p className="text-sm leading-relaxed" style={{ color: '#475569' }}>{formData.medicalHistory}</p>
+            <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+              {formData.medicalHistory}
+            </p>
           ) : (
             <div className="flex items-center gap-3 py-4">
               <FileText size={20} className="text-gray-300" />
-              <p className="text-sm" style={{ color: '#94a3b8' }}>
-                No medical history recorded. Click "Edit Profile" to add your medical history, allergies, or chronic conditions.
+              <p className="text-sm text-slate-400 dark:text-slate-500">
+                No medical history recorded. Click "Edit Profile" to add your
+                medical history, allergies, or chronic conditions.
               </p>
             </div>
           )}
@@ -268,8 +306,9 @@ const ViewMode = ({ formData, user }) => {
 /* ─── Edit Form ─────────────────────────────────────────────────── */
 const EditForm = ({ formData, onChange, onSave, onCancel, saving }) => {
   const inputClass =
-    'w-full px-4 py-3 bg-[#F8FAFC] border border-gray-200 rounded-xl text-[#1e293b] font-medium focus:ring-2 focus:ring-[#055153] focus:border-transparent outline-none transition-all placeholder:text-gray-400';
-  const labelClass = 'block text-[11px] font-bold tracking-widest uppercase mb-2';
+    "w-full px-4 py-3 bg-[#F8FAFC] dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[#1e293b] dark:text-slate-100 font-medium focus:ring-2 focus:ring-[#055153] focus:border-transparent outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-slate-500";
+  const labelClass =
+    "block text-[11px] font-bold tracking-widest uppercase mb-2";
 
   return (
     <div className="space-y-8">
@@ -277,20 +316,51 @@ const EditForm = ({ formData, onChange, onSave, onCancel, saving }) => {
       <div>
         <div className="flex items-center gap-2 mb-5">
           <div className="w-1 h-5 bg-[#055153] rounded-full" />
-          <h3 className="font-bold text-sm" style={{ color: '#1e293b' }}>Personal Information</h3>
+          <h3 className="font-bold text-sm text-[#1e293b] dark:text-slate-100">
+            Personal Information
+          </h3>
         </div>
         <div className="grid md:grid-cols-2 gap-5">
           <div>
-            <label className={labelClass} style={{ color: '#64748b' }}>Full Name *</label>
-            <input type="text" name="name" value={formData.name} onChange={onChange} placeholder="Enter your full name" className={inputClass} />
+            <label
+              className={`${labelClass} text-slate-500 dark:text-slate-400`}
+            >
+              Full Name *
+            </label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={onChange}
+              placeholder="Enter your full name"
+              className={inputClass}
+            />
           </div>
           <div>
-            <label className={labelClass} style={{ color: '#64748b' }}>Age *</label>
-            <input type="number" name="age" value={formData.age} onChange={onChange} placeholder="e.g. 25" className={inputClass} />
+            <label
+              className={`${labelClass} text-slate-500 dark:text-slate-400`}
+            >
+              Age *
+            </label>
+            <input
+              type="number"
+              name="age"
+              value={formData.age}
+              onChange={onChange}
+              placeholder="e.g. 25"
+              className={inputClass}
+            />
           </div>
           <div>
-            <label className={labelClass} style={{ color: '#64748b' }}>Gender *</label>
-            <select name="gender" value={formData.gender} onChange={onChange} className={inputClass}>
+            <label className={labelClass} style={{ color: "#64748b" }}>
+              Gender *
+            </label>
+            <select
+              name="gender"
+              value={formData.gender}
+              onChange={onChange}
+              className={inputClass}
+            >
               <option value="">Select Gender</option>
               <option value="Male">Male</option>
               <option value="Female">Female</option>
@@ -298,8 +368,15 @@ const EditForm = ({ formData, onChange, onSave, onCancel, saving }) => {
             </select>
           </div>
           <div>
-            <label className={labelClass} style={{ color: '#64748b' }}>Blood Group</label>
-            <select name="bloodGroup" value={formData.bloodGroup} onChange={onChange} className={inputClass}>
+            <label className={labelClass} style={{ color: "#64748b" }}>
+              Blood Group
+            </label>
+            <select
+              name="bloodGroup"
+              value={formData.bloodGroup}
+              onChange={onChange}
+              className={inputClass}
+            >
               <option value="">Select Blood Group</option>
               <option value="A+">A+</option>
               <option value="A-">A-</option>
@@ -318,16 +395,36 @@ const EditForm = ({ formData, onChange, onSave, onCancel, saving }) => {
       <div>
         <div className="flex items-center gap-2 mb-5">
           <div className="w-1 h-5 bg-[#0E8A7F] rounded-full" />
-          <h3 className="font-bold text-sm" style={{ color: '#1e293b' }}>Contact Information</h3>
+          <h3 className="font-bold text-sm" style={{ color: "#1e293b" }}>
+            Contact Information
+          </h3>
         </div>
         <div className="grid md:grid-cols-2 gap-5">
           <div>
-            <label className={labelClass} style={{ color: '#64748b' }}>Phone Number *</label>
-            <input type="tel" name="phone" value={formData.phone} onChange={onChange} placeholder="e.g. 0771234567" className={inputClass} />
+            <label className={labelClass} style={{ color: "#64748b" }}>
+              Phone Number *
+            </label>
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={onChange}
+              placeholder="e.g. 0771234567"
+              className={inputClass}
+            />
           </div>
           <div>
-            <label className={labelClass} style={{ color: '#64748b' }}>Address *</label>
-            <input type="text" name="address" value={formData.address} onChange={onChange} placeholder="Enter your address" className={inputClass} />
+            <label className={labelClass} style={{ color: "#64748b" }}>
+              Address *
+            </label>
+            <input
+              type="text"
+              name="address"
+              value={formData.address}
+              onChange={onChange}
+              placeholder="Enter your address"
+              className={inputClass}
+            />
           </div>
         </div>
       </div>
@@ -336,7 +433,9 @@ const EditForm = ({ formData, onChange, onSave, onCancel, saving }) => {
       <div>
         <div className="flex items-center gap-2 mb-5">
           <div className="w-1 h-5 bg-amber-500 rounded-full" />
-          <h3 className="font-bold text-sm" style={{ color: '#1e293b' }}>Medical History</h3>
+          <h3 className="font-bold text-sm" style={{ color: "#1e293b" }}>
+            Medical History
+          </h3>
         </div>
         <textarea
           name="medicalHistory"
@@ -346,17 +445,21 @@ const EditForm = ({ formData, onChange, onSave, onCancel, saving }) => {
           placeholder="Enter any relevant medical history, allergies, chronic conditions, or current medications..."
           className={`${inputClass} resize-none`}
         />
-        <p className="text-xs mt-2 flex items-center gap-1.5" style={{ color: '#94a3b8' }}>
-          <Shield size={12} /> This information is encrypted and only shared with your healthcare providers.
+        <p
+          className="text-xs mt-2 flex items-center gap-1.5"
+          style={{ color: "#94a3b8" }}
+        >
+          <Shield size={12} /> This information is encrypted and only shared
+          with your healthcare providers.
         </p>
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-3 justify-end pt-4 border-t border-gray-100">
+      <div className="flex gap-3 justify-end pt-4 border-t border-gray-100 dark:border-slate-700">
         <button
           onClick={onCancel}
           className="flex items-center gap-2 px-6 py-2.5 border-2 border-gray-200 rounded-xl font-semibold text-sm hover:border-gray-300 hover:bg-gray-50 transition-all"
-          style={{ color: '#475569' }}
+          style={{ color: "#475569" }}
         >
           <X size={16} />
           Cancel
@@ -367,7 +470,7 @@ const EditForm = ({ formData, onChange, onSave, onCancel, saving }) => {
           className="flex items-center gap-2 bg-[#055153] hover:bg-[#044143] text-white px-6 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-lg shadow-teal-900/10 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Save size={16} />
-          {saving ? 'Saving...' : 'Save Changes'}
+          {saving ? "Saving..." : "Save Changes"}
         </button>
       </div>
     </div>

@@ -1,156 +1,216 @@
-import React from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { 
-  Calendar, 
-  Users, 
-  FileText, 
-  Activity, 
-  CreditCard, 
+import React, { useState, useEffect } from "react";
+import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
+import {
+  Calendar,
+  Users,
+  Activity,
+  CreditCard,
   User,
   LogOut,
-  Bell,
   Settings,
   Video,
   Upload,
   Pill,
-} from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { PatientAuthProvider } from '../patient/context/PatientAuthContext';
-import Logo from '../components/UI/Logo';
-import { useTheme } from '../context/ThemeContext';
-import { Sun, Moon } from 'lucide-react';
+  Menu,
+  Sun,
+  Moon,
+  LayoutGrid,
+  Stethoscope,
+} from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { PatientAuthProvider } from "../patient/context/PatientAuthContext";
+import { useTheme } from "../context/ThemeContext";
+import NotificationBell from "../components/NotificationBell";
+
+const navItems = [
+  { name: "Dashboard", icon: LayoutGrid, path: "/patient/dashboard" },
+  { name: "My Appointments", icon: Calendar, path: "/patient/appointments" },
+  { name: "Video Consultations", icon: Video, path: "/patient/telemedicine" },
+  { name: "My Profile", icon: User, path: "/patient/profile" },
+  { name: "Medical Reports", icon: Upload, path: "/patient/reports" },
+  { name: "My Prescriptions", icon: Pill, path: "/patient/prescriptions" },
+  { name: "Find Doctors", icon: Users, path: "/patient/doctors" },
+  { name: "Payments", icon: CreditCard, path: "/patient/payments" },
+  {
+    name: "AI Symptom Checker",
+    icon: Stethoscope,
+    path: "/patient/symptom-checker",
+  },
+];
 
 const PatientLayout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { theme, toggleTheme } = useTheme();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Close sidebar on route change
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/');
+    const confirmed = window.confirm("Are you sure you want to sign out?");
+    if (!confirmed) return;
+    try {
+      await logout();
+    } catch (_) {}
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
+    window.location.href = "/signin";
   };
 
-  const navItems = [
-    { name: 'Dashboard', icon: Activity, path: '/patient/dashboard' },
-    { name: 'My Appointments', icon: Calendar, path: '/patient/appointments' },
-    { name: 'Video Consultations', icon: Video, path: '/patient/telemedicine' },
-    { name: 'My Profile', icon: User, path: '/patient/profile' },
-    { name: 'Medical Reports', icon: Upload, path: '/patient/reports' },
-    { name: 'My Prescriptions', icon: Pill, path: '/patient/prescriptions' },
-    { name: 'Find Doctors', icon: Users, path: '/patient/doctors' },
-    { name: 'Payments', icon: CreditCard, path: '/patient/payments' },
-  ];
+  const patientName = user?.name || user?.fullName || "Patient";
+  const initials = patientName
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
+  const NavButton = ({ item }) => {
+    const isActive = location.pathname === item.path;
+    return (
+      <button
+        onClick={() => navigate(item.path)}
+        className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 text-sm font-semibold ${
+          isActive
+            ? "bg-white dark:bg-slate-800 text-[#055153] dark:text-teal-400 shadow-sm shadow-slate-200 dark:shadow-black/20 border border-slate-100 dark:border-slate-700"
+            : "text-[#64748B] dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800/50 hover:text-[#055153] dark:hover:text-teal-400"
+        }`}
+      >
+        <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+        <span className="flex-1 text-left">{item.name}</span>
+      </button>
+    );
+  };
+
+  const Sidebar = () => (
+    <div className="w-[260px] h-screen bg-[#F8FAFB] dark:bg-slate-900 flex flex-col pt-6 font-inter border-r border-[#E2E8F0] dark:border-slate-800 transition-colors duration-300">
+      {/* Brand */}
+      <div className="px-6 mb-10 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-[#055153]/10 dark:bg-teal-400/10 flex items-center justify-center">
+          <Activity size={22} className="text-[#055153] dark:text-teal-400" />
+        </div>
+        <div className="flex flex-col">
+          <span className="font-extrabold text-[#055153] dark:text-teal-400 text-[18px] tracking-tight leading-tight uppercase font-manrope">
+            MediLink
+          </span>
+          <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold tracking-[0.1em] uppercase">
+            Patient Portal
+          </span>
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
+        {navItems.map((item, idx) => (
+          <NavButton key={idx} item={item} />
+        ))}
+      </nav>
+
+      {/* Logout */}
+      <div className="px-4 pb-6 space-y-2">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 text-sm font-semibold text-[#64748B] dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400"
+        >
+          <LogOut size={20} strokeWidth={2} />
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-[#F4F7F9] font-inter">
-      {/* Top Navbar */}
-      <header className="bg-white dark:bg-slate-950 px-6 h-16 flex items-center justify-between border-b border-gray-100 dark:border-slate-900 sticky top-0 z-50">
-        <div className="flex items-center gap-10">
-          {/* Logo brand */}
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
-             {/* Text logo matching style */}
-             <span className="font-bold text-xl text-[#055153]">Aura <span className="font-medium">Health</span></span>
+    <div className="flex w-full min-h-screen bg-[#F8FAFB] dark:bg-slate-950 overflow-hidden transition-colors duration-300 font-inter">
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div
+        className={`fixed inset-y-0 left-0 z-[60] lg:static lg:z-auto transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 transition-transform duration-300 ease-in-out flex-shrink-0`}
+      >
+        <Sidebar />
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+        {/* Top Header */}
+        <header className="w-full h-20 bg-white dark:bg-slate-950 sticky top-0 z-40 flex items-center justify-between px-4 md:px-8 border-b border-slate-100 dark:border-slate-900 transition-colors duration-300 flex-shrink-0">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setSidebarOpen((v) => !v)}
+              className="lg:hidden p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-lg"
+            >
+              <Menu size={24} />
+            </button>
           </div>
 
-          {/* Top Nav Links */}
-          <nav className="hidden md:flex items-center gap-8 text-[#4B5A69] font-medium text-[15px]">
-            <a href="#" className="text-[#055153] border-b-2 border-[#055153] pb-1">Find Care</a>
-            <a href="#" className="hover:text-[#055153] pb-1 border-b-2 border-transparent">Services</a>
-            <a href="#" className="hover:text-[#055153] pb-1 border-b-2 border-transparent">Doctors</a>
-            <a href="#" className="hover:text-[#055153] pb-1 border-b-2 border-transparent">About Us</a>
-          </nav>
-        </div>
-
-        {/* Top Right Actions */}
-        <div className="flex items-center gap-5 text-gray-500 bg-white dark:bg-transparent">
-          <button onClick={toggleTheme} className="hover:text-[#055153] dark:text-slate-300 dark:hover:text-teal-400 transition-colors" title="Toggle theme">
-            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
-          <button className="hover:text-[#055153] dark:text-slate-300 dark:hover:text-teal-400 transition-colors"><Bell size={20} /></button>
-          <button className="hover:text-[#055153] dark:text-slate-300 dark:hover:text-teal-400 transition-colors"><Settings size={20} /></button>
-          <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden border border-gray-300">
-            {user?.avatar ? (
-              <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
-            ) : (
-              <User size={16} className="text-gray-400" />
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* Main Container */}
-      <div className="flex max-w-[1400px] mx-auto w-full pt-8 px-4 lg:px-8 gap-8 items-start">
-        
-        {/* Left Sidebar */}
-        <aside className="w-[240px] flex-shrink-0 hidden lg:flex flex-col gap-8 sticky top-28">
-          
-          {/* User Synopsis */}
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full border border-gray-200 overflow-hidden bg-white shadow-sm flex-shrink-0">
-               {user?.avatar ? (
-                <img src={user.avatar} alt="User avatar" className="w-full h-full object-cover" />
-               ) : (
-                  <div className="w-full h-full bg-[#055153] text-white flex items-center justify-center font-bold text-lg">
-                    {(user?.name || user?.fullName || 'P').charAt(0)}
-                  </div>
-               )}
-            </div>
-            <div>
-              <p className="text-[12px] text-gray-400 font-medium tracking-wide">Welcome back</p>
-              <h3 className="font-bold text-[#055153] text-[15px] leading-tight truncate w-[160px]">
-                {user?.name || user?.fullName || "Patient"}
-              </h3>
-            </div>
-          </div>
-
-          {/* Book Appointment CTA Button */}
-          <button 
-            onClick={() => navigate('/appointments')}
-            className="w-full bg-[#0E8A7F] hover:bg-[#0b746a] text-white font-semibold py-3 px-4 rounded-[14px] shadow-sm transition-all"
-          >
-            Book Appointment
-          </button>
-
-          {/* Nav Links */}
-          <nav className="flex flex-col gap-2">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <NavLink
-                  key={item.name}
-                  to={item.path}
-                  end
-                  className={({ isActive }) => `
-                    flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-[15px] transition-all duration-200
-                    ${isActive 
-                      ? 'bg-white shadow-sm text-[#055153] shadow-gray-200/50' 
-                      : 'text-[#4B5A69] hover:bg-white/60 hover:text-[#055153]'}
-                  `}
-                >
-                  <Icon size={18} className="opacity-80" />
-                  {item.name}
-                </NavLink>
-              );
-            })}
-             <button
-                onClick={handleLogout}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-[15px] transition-all duration-200 text-[#4B5A69] hover:bg-white/60 hover:text-red-600 mt-2"
+          {/* Right section */}
+          <div className="flex items-center gap-3 md:gap-6">
+            <div className="flex items-center gap-1 md:gap-4">
+              {/* Theme toggle */}
+              <button
+                onClick={toggleTheme}
+                className="p-2 text-slate-700 dark:text-slate-300 hover:text-[#055153] dark:hover:text-teal-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors rounded-full"
+                title="Toggle theme"
               >
-                <LogOut size={18} className="opacity-80" />
-                Sign Out
+                {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
               </button>
-          </nav>
+              <NotificationBell />
+              <button className="p-2 text-slate-700 dark:text-slate-300 hover:text-[#055153] dark:hover:text-teal-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors rounded-full hidden md:block">
+                <Settings size={22} strokeWidth={2.5} />
+              </button>
+            </div>
 
-        </aside>
+            <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 hidden md:block"></div>
 
-        {/* Dashboard Content Outlet */}
-        <main className="flex-1 min-w-0 pb-20">
-          <PatientAuthProvider>
-            <Outlet />
-          </PatientAuthProvider>
+            {/* Patient Profile */}
+            <button
+              onClick={() => navigate("/patient/profile")}
+              className="flex items-center gap-3 group text-start pl-2"
+            >
+              <div className="flex-col hidden sm:flex">
+                <span className="text-sm font-bold text-[#112429] dark:text-slate-200 group-hover:text-[#055153] dark:group-hover:text-teal-400 transition-colors font-manrope">
+                  {patientName}
+                </span>
+                <span className="text-[9px] font-extrabold text-[#055153] dark:text-teal-400 uppercase tracking-wider bg-[#055153]/10 dark:bg-teal-400/10 px-1.5 py-0.5 rounded-md mt-0.5 w-fit ml-auto">
+                  Patient
+                </span>
+              </div>
+              <div className="w-10 h-10 md:w-11 md:h-11 bg-teal-100 dark:bg-slate-800 rounded-full overflow-hidden border-2 border-transparent group-hover:border-[#055153]/20 dark:group-hover:border-teal-400/20 transition-all shadow-sm flex items-center justify-center">
+                {user?.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-[#055153] dark:text-teal-400 font-bold text-sm">
+                    {initials}
+                  </span>
+                )}
+              </div>
+            </button>
+          </div>
+        </header>
+
+        {/* Page content */}
+        <main className="flex-1 overflow-y-auto w-full">
+          <div className="mx-auto max-w-[1600px] h-full pb-10">
+            <PatientAuthProvider>
+              <Outlet />
+            </PatientAuthProvider>
+          </div>
         </main>
-
       </div>
     </div>
   );

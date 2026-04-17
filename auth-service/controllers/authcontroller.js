@@ -15,7 +15,7 @@ import nodemailer from "nodemailer";
 export const register = async (req, res, next) => {
   try {
     const isFirstAccount = (await Patient.countDocuments()) === 0;
-    
+
     if (isFirstAccount) {
       req.body.role = "admin";
     } else {
@@ -28,7 +28,7 @@ export const register = async (req, res, next) => {
     // Handle doctor specialization
     if (req.body.role === "doctor" && req.body.specialization) {
       req.body.doctorProfile = {
-        specializations: [req.body.specialization]
+        specializations: [req.body.specialization],
       };
     }
 
@@ -42,7 +42,6 @@ export const register = async (req, res, next) => {
   }
 };
 
-
 export const verifyToken = async (req, res) => {
   const { token } = req.body;
 
@@ -53,16 +52,16 @@ export const verifyToken = async (req, res) => {
   try {
     const { userId } = verifyJWT(token);
     const user = await Patient.findById(userId).select("-password");
-    
+
     if (!user) {
       throw new NotFoundError("user not found");
     }
 
-    res.status(StatusCodes.OK).json({ 
-      userId: user._id, 
+    res.status(StatusCodes.OK).json({
+      userId: user._id,
       role: user.role,
       fullName: user.fullName,
-      email: user.email
+      email: user.email,
     });
   } catch (error) {
     throw new UnauthenticatedError("invalid token");
@@ -176,7 +175,7 @@ export const forgotPassword = async (req, res) => {
     }
     console.error("Forgot password error:", error);
     throw new BadRequestError(
-      "Failed to send reset email. Please try again later."
+      "Failed to send reset email. Please try again later.",
     );
   }
 };
@@ -286,7 +285,7 @@ export const getCurrentUser = async (req, res) => {
 
     const { userId } = verifyJWT(token);
     const user = await Patient.findById(userId).select("-password");
-    
+
     if (!user) {
       throw new NotFoundError("User not found");
     }
@@ -301,9 +300,85 @@ export const getCurrentUser = async (req, res) => {
       },
     });
   } catch (error) {
-    if (error.name === "UnauthenticatedError" || error.name === "NotFoundError") {
+    if (
+      error.name === "UnauthenticatedError" ||
+      error.name === "NotFoundError"
+    ) {
       throw error;
     }
     throw new UnauthenticatedError("Invalid token");
   }
+};
+
+// ── Admin: Get all users with optional filtering ────────────────────────────
+export const getAllUsers = async (req, res) => {
+  const { role, search, page = 1, limit = 50 } = req.query;
+  const filter = {};
+  if (role && ["patient", "doctor", "admin"].includes(role)) filter.role = role;
+  if (search) {
+    filter.$or = [
+      { fullName: { $regex: search, $options: "i" } },
+      { email: { $regex: search, $options: "i" } },
+    ];
+  }
+  const skip = (Number(page) - 1) * Number(limit);
+  const [users, total] = await Promise.all([
+    Patient.find(filter)
+      .select("-password -resetPasswordToken -resetPasswordExpiry")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit)),
+    Patient.countDocuments(filter),
+  ]);
+  res
+    .status(StatusCodes.OK)
+    .json({
+      success: true,
+      data: users,
+      total,
+      page: Number(page),
+      pages: Math.ceil(total / Number(limit)),
+    });
+};
+
+// ── Admin: Get platform stats ───────────────────────────────────────────────
+export const getAdminStats = async (req, res) => {
+  const [totalUsers, patients, doctors, admins, recentUsers] =
+    await Promise.all([
+      Patient.countDocuments(),
+      Patient.countDocuments({ role: "patient" }),
+      Patient.countDocuments({ role: "doctor" }),
+      Patient.countDocuments({ role: "admin" }),
+      Patient.find().select("-password").sort({ createdAt: -1 }).limit(5),
+    ]);
+  res
+    .status(StatusCodes.OK)
+    .json({
+      success: true,
+      data: { totalUsers, patients, doctors, admins, recentUsers },
+    });
+};
+
+// ── Admin: Update user role ─────────────────────────────────────────────────
+export const updateUserRole = async (req, res) => {
+  const { id } = req.params;
+  const { role } = req.body;
+  if (!["patient", "doctor", "admin"].includes(role)) {
+    throw new BadRequestError("Invalid role");
+  }
+  const user = await Patient.findByIdAndUpdate(
+    id,
+    { role },
+    { new: true },
+  ).select("-password");
+  if (!user) throw new NotFoundError("User not found");
+  res.status(StatusCodes.OK).json({ success: true, data: user });
+};
+
+// ── Admin: Delete user ──────────────────────────────────────────────────────
+export const deleteUser = async (req, res) => {
+  const { id } = req.params;
+  const user = await Patient.findByIdAndDelete(id);
+  if (!user) throw new NotFoundError("User not found");
+  res.status(StatusCodes.OK).json({ success: true, msg: "User deleted" });
 };

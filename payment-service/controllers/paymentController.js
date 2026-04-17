@@ -1,30 +1,38 @@
-import Payment from '../models/Payment.js';
-import Transaction from '../models/Transaction.js';
-import { 
+import Payment from "../models/Payment.js";
+import Transaction from "../models/Transaction.js";
+import {
   createCheckoutSession as createStripeCheckoutSession,
   retrieveCheckoutSession,
   createRefund,
-} from '../utils/stripeUtils.js';
+} from "../utils/stripeUtils.js";
 import {
   PaymentNotFoundError,
   InvalidPaymentError,
   StripeError,
   RefundError,
-} from '../errors/customErrors.js';
-import { v4 as uuidv4 } from 'uuid';
+} from "../errors/customErrors.js";
+import { v4 as uuidv4 } from "uuid";
 
 // Create checkout session for payment
 export const createCheckoutSession = async (req, res, next) => {
   try {
-    const { amount, currency = 'lkr', paymentType, referenceId, metadata } = req.body;
+    const {
+      amount,
+      currency = "lkr",
+      paymentType,
+      referenceId,
+      metadata,
+    } = req.body;
     const userId = req.user?.userId || req.user?._id;
 
     if (!amount || !paymentType || !referenceId) {
-      throw new InvalidPaymentError('Missing required fields: amount, paymentType, referenceId');
+      throw new InvalidPaymentError(
+        "Missing required fields: amount, paymentType, referenceId",
+      );
     }
 
     // Build success and cancel URLs
-    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const baseUrl = process.env.FRONTEND_URL || "http://localhost:3000";
     const successUrl = `${baseUrl}/payment/success?sessionId={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${baseUrl}/payment/cancel`;
 
@@ -39,11 +47,11 @@ export const createCheckoutSession = async (req, res, next) => {
         description: `${paymentType} payment for user ${userId}`,
       },
       successUrl,
-      cancelUrl
+      cancelUrl,
     );
 
     // Save payment to DB with pending status (Non-fatal fallback)
-    let paymentId = 'pending_in_stripe';
+    let paymentId = "pending_in_stripe";
     try {
       const payment = await Payment.create({
         userId,
@@ -52,7 +60,7 @@ export const createCheckoutSession = async (req, res, next) => {
         paymentType,
         referenceId,
         stripeCheckoutSessionId: checkoutSession.id,
-        status: 'pending',
+        status: "pending",
         metadata: {
           ...metadata,
           description: `${paymentType} payment`,
@@ -60,11 +68,14 @@ export const createCheckoutSession = async (req, res, next) => {
       });
       paymentId = payment._id;
     } catch (dbError) {
-      console.error('⚠️ DB Error: Could not save payment record, but continuing with Stripe redirect:', dbError.message);
+      console.error(
+        "⚠️ DB Error: Could not save payment record, but continuing with Stripe redirect:",
+        dbError.message,
+      );
     }
 
     res.status(201).json({
-      status: 'success',
+      status: "success",
       data: {
         paymentId,
         checkoutSessionId: checkoutSession.id,
@@ -85,29 +96,31 @@ export const verifyCheckoutSession = async (req, res, next) => {
     const userId = req.user?.userId || req.user?._id;
 
     if (!sessionId) {
-      throw new InvalidPaymentError('Checkout session ID is required');
+      throw new InvalidPaymentError("Checkout session ID is required");
     }
 
     // Retrieve session from Stripe
     const session = await retrieveCheckoutSession(sessionId);
 
-    if (session.payment_status !== 'paid') {
-      throw new InvalidPaymentError(`Checkout session not completed. Status: ${session.payment_status}`);
+    if (session.payment_status !== "paid") {
+      throw new InvalidPaymentError(
+        `Checkout session not completed. Status: ${session.payment_status}`,
+      );
     }
 
     // Find and update payment in DB
     const payment = await Payment.findOneAndUpdate(
       { stripeCheckoutSessionId: sessionId },
       {
-        status: 'completed',
+        status: "completed",
         stripeChargeId: session.payment_intent?.charges?.data[0]?.id,
-        paymentMethod: 'card',
+        paymentMethod: "card",
         receipt: {
           url: session.payment_intent?.charges?.data[0]?.receipt_url,
           receiptNumber: session.id,
         },
       },
-      { new: true }
+      { new: true },
     );
 
     if (!payment) {
@@ -116,7 +129,7 @@ export const verifyCheckoutSession = async (req, res, next) => {
 
     // Verify user owns this payment
     if (payment.userId.toString() !== userId.toString()) {
-      throw new InvalidPaymentError('Unauthorized access to this payment');
+      throw new InvalidPaymentError("Unauthorized access to this payment");
     }
 
     // Create transaction record
@@ -124,25 +137,32 @@ export const verifyCheckoutSession = async (req, res, next) => {
       paymentId: payment._id,
       transactionId: uuidv4(),
       amount: payment.amount,
-      fee: payment.amount * 0.029 + 0.30,
-      netAmount: payment.amount - (payment.amount * 0.029 + 0.30),
-      status: 'success',
+      fee: payment.amount * 0.029 + 0.3,
+      netAmount: payment.amount - (payment.amount * 0.029 + 0.3),
+      status: "success",
       stripeEventId: session.payment_intent?.id,
     });
 
     res.status(200).json({
-      status: 'success',
-      message: 'Payment verified successfully',
+      status: "success",
+      message: "Payment verified successfully",
       data: {
         paymentId: payment._id,
         amount: payment.amount,
+        currency: payment.currency,
         status: payment.status,
+        referenceId: payment.referenceId,
+        metadata: payment.metadata,
+        createdAt: payment.createdAt,
       },
     });
   } catch (error) {
-    next(error instanceof InvalidPaymentError || error instanceof PaymentNotFoundError
-      ? error
-      : new StripeError(error.message));
+    next(
+      error instanceof InvalidPaymentError ||
+        error instanceof PaymentNotFoundError
+        ? error
+        : new StripeError(error.message),
+    );
   }
 };
 
@@ -160,17 +180,20 @@ export const getPayment = async (req, res, next) => {
 
     // Verify ownership
     if (payment.userId.toString() !== userId.toString()) {
-      throw new InvalidPaymentError('Unauthorized access to this payment');
+      throw new InvalidPaymentError("Unauthorized access to this payment");
     }
 
     res.status(200).json({
-      status: 'success',
+      status: "success",
       data: payment,
     });
   } catch (error) {
-    next(error instanceof PaymentNotFoundError || error instanceof InvalidPaymentError
-      ? error
-      : new PaymentNotFoundError());
+    next(
+      error instanceof PaymentNotFoundError ||
+        error instanceof InvalidPaymentError
+        ? error
+        : new PaymentNotFoundError(),
+    );
   }
 };
 
@@ -180,18 +203,26 @@ export const getDoctorPaymentSummary = async (req, res, next) => {
     const { doctorId } = req.query;
     if (!doctorId) {
       return res.status(400).json({
-        status: 'error',
-        message: 'doctorId query parameter is required',
+        status: "error",
+        message: "doctorId query parameter is required",
       });
     }
 
     const role = req.user?.role;
-    if (role !== 'doctor' && role !== 'admin') {
-      return res.status(403).json({ status: 'error', message: 'Forbidden' });
+    if (role !== "doctor" && role !== "admin") {
+      return res.status(403).json({ status: "error", message: "Forbidden" });
     }
 
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    const startOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      1,
+      0,
+      0,
+      0,
+      0,
+    );
     const endOfMonth = new Date(
       now.getFullYear(),
       now.getMonth() + 1,
@@ -199,27 +230,27 @@ export const getDoctorPaymentSummary = async (req, res, next) => {
       23,
       59,
       59,
-      999
+      999,
     );
 
     const agg = await Payment.aggregate([
       {
         $match: {
-          status: 'completed',
+          status: "completed",
           createdAt: { $gte: startOfMonth, $lte: endOfMonth },
-          'metadata.doctorId': String(doctorId),
+          "metadata.doctorId": String(doctorId),
         },
       },
-      { $group: { _id: null, total: { $sum: '$amount' } } },
+      { $group: { _id: null, total: { $sum: "$amount" } } },
     ]);
 
     const monthlyTotal = agg[0]?.total || 0;
 
     res.status(200).json({
-      status: 'success',
+      status: "success",
       data: {
         monthlyTotal,
-        currency: 'LKR',
+        currency: "LKR",
       },
     });
   } catch (error) {
@@ -244,7 +275,7 @@ export const getUserPayments = async (req, res, next) => {
     const total = await Payment.countDocuments(query);
 
     res.status(200).json({
-      status: 'success',
+      status: "success",
       data: payments,
       pagination: {
         page: parseInt(page),
@@ -272,27 +303,27 @@ export const refundPayment = async (req, res, next) => {
     }
 
     if (payment.userId.toString() !== userId.toString()) {
-      throw new InvalidPaymentError('Unauthorized access to this payment');
+      throw new InvalidPaymentError("Unauthorized access to this payment");
     }
 
-    if (payment.status === 'refunded') {
-      throw new RefundError('Payment already refunded');
+    if (payment.status === "refunded") {
+      throw new RefundError("Payment already refunded");
     }
 
-    if (payment.status !== 'completed') {
-      throw new RefundError('Only completed payments can be refunded');
+    if (payment.status !== "completed") {
+      throw new RefundError("Only completed payments can be refunded");
     }
 
     // Create refund with Stripe
     const refund = await createRefund(payment.stripeChargeId, amount, reason);
 
     // Update payment status
-    payment.status = 'refunded';
+    payment.status = "refunded";
     await payment.save();
 
     res.status(200).json({
-      status: 'success',
-      message: 'Payment refund initiated',
+      status: "success",
+      message: "Payment refund initiated",
       data: {
         paymentId: payment._id,
         refundAmount: amount || payment.amount,
@@ -300,9 +331,56 @@ export const refundPayment = async (req, res, next) => {
       },
     });
   } catch (error) {
-    next(error instanceof RefundError || error instanceof PaymentNotFoundError || error instanceof InvalidPaymentError
-      ? error
-      : new RefundError(error.message));
+    next(
+      error instanceof RefundError ||
+        error instanceof PaymentNotFoundError ||
+        error instanceof InvalidPaymentError
+        ? error
+        : new RefundError(error.message),
+    );
+  }
+};
+
+// Admin: Platform-wide payment overview
+export const getAdminPaymentOverview = async (req, res, next) => {
+  try {
+    const [
+      totalPayments,
+      completedPayments,
+      pendingPayments,
+      failedPayments,
+      refundedPayments,
+      revenueAgg,
+      recentPayments,
+    ] = await Promise.all([
+      Payment.countDocuments(),
+      Payment.countDocuments({ status: "completed" }),
+      Payment.countDocuments({ status: "pending" }),
+      Payment.countDocuments({ status: "failed" }),
+      Payment.countDocuments({ status: "refunded" }),
+      Payment.aggregate([
+        { $match: { status: "completed" } },
+        { $group: { _id: null, total: { $sum: "$amount" } } },
+      ]),
+      Payment.find().sort({ createdAt: -1 }).limit(20).lean(),
+    ]);
+
+    const totalRevenue = revenueAgg[0]?.total || 0;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalPayments,
+        completedPayments,
+        pendingPayments,
+        failedPayments,
+        refundedPayments,
+        totalRevenue,
+        recentPayments,
+      },
+    });
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -312,4 +390,5 @@ export default {
   getPayment,
   getUserPayments,
   refundPayment,
+  getAdminPaymentOverview,
 };

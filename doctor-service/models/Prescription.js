@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 /**
  * Prescription Model — doctor-service
@@ -12,44 +12,44 @@ const MedicineSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, 'Medicine name is required'],
+      required: [true, "Medicine name is required"],
       trim: true,
     },
     dosage: {
       type: String,
       trim: true,
-      default: '',
+      default: "",
     },
     frequency: {
       type: String,
       trim: true,
-      default: '',
+      default: "",
     },
     duration: {
       type: String,
       trim: true,
-      default: '',
+      default: "",
     },
     instructions: {
       type: String,
       trim: true,
-      default: '',
+      default: "",
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const PrescriptionSchema = new mongoose.Schema(
   {
     doctorId: {
       type: String,
-      required: [true, 'Please provide doctorId'],
+      required: [true, "Please provide doctorId"],
       trim: true,
       index: true,
     },
     patientId: {
       type: String,
-      required: [true, 'Please provide patientId'],
+      required: [true, "Please provide patientId"],
       trim: true,
       index: true,
     },
@@ -58,11 +58,16 @@ const PrescriptionSchema = new mongoose.Schema(
       trim: true,
       index: true,
     },
+    doctorName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     diagnosis: {
       type: String,
-      required: [true, 'Please provide a diagnosis'],
+      required: [true, "Please provide a diagnosis"],
       trim: true,
-      maxlength: [500, 'Diagnosis cannot exceed 500 characters'],
+      maxlength: [500, "Diagnosis cannot exceed 500 characters"],
     },
     // Structured medicine array — each entry has name, dosage, frequency, duration
     medicines: {
@@ -72,7 +77,7 @@ const PrescriptionSchema = new mongoose.Schema(
     notes: {
       type: String,
       trim: true,
-      maxlength: [1000, 'Notes cannot exceed 1000 characters'],
+      maxlength: [1000, "Notes cannot exceed 1000 characters"],
     },
     followUpDate: {
       type: Date,
@@ -81,21 +86,21 @@ const PrescriptionSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: {
-        values: ['active', 'expired', 'cancelled'],
-        message: 'Status must be active, expired, or cancelled',
+        values: ["active", "expired", "cancelled"],
+        message: "Status must be active, expired, or cancelled",
       },
-      default: 'active',
+      default: "active",
     },
     date: {
       type: Date,
       default: Date.now,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Compound index for fast lookups
 PrescriptionSchema.index({ doctorId: 1, patientId: 1 });
 PrescriptionSchema.index({ doctorId: 1, date: -1 });
 
-export default mongoose.model('Prescription', PrescriptionSchema);
+export default mongoose.model("Prescription", PrescriptionSchema);

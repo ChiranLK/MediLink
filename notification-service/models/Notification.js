@@ -17,11 +17,16 @@ const notificationSchema = new mongoose.Schema(
     phone: {
       type: String,
       trim: true,
-      required: true,
+      default: "",
     },
     type: {
       type: String,
-      enum: ["APPOINTMENT_BOOKED", "CONSULTATION_COMPLETED"],
+      enum: [
+        "APPOINTMENT_BOOKED",
+        "CONSULTATION_COMPLETED",
+        "APPOINTMENT_BOOKED_DOCTOR",
+        "CONSULTATION_COMPLETED_DOCTOR",
+      ],
       required: true,
     },
     message: {
@@ -40,9 +45,9 @@ const notificationSchema = new mongoose.Schema(
     timestamp: {
       type: Date,
       default: Date.now,
-    }
+    },
   },
-  { versionKey: false }
+  { versionKey: false },
 );
 
 const Notification = mongoose.model("Notification", notificationSchema);

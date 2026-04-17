@@ -1,12 +1,12 @@
-import axios from 'axios';
+import axios from "axios";
 
 /**
  * Doctor Service Client
- * 
+ *
  * Handles cross-service communication with Doctor microservice
  * for fetching doctor profiles filtered by specialization,
  * availability status, and other criteria.
- * 
+ *
  * NOTE: Doctor service runs on http://localhost:3003 (not 5002)
  * Port mapping:
  * - Auth Service: :5000
@@ -17,21 +17,26 @@ import axios from 'axios';
  */
 
 // Configuration
-const DOCTOR_SERVICE_URL = process.env.DOCTOR_SERVICE_URL || 'http://localhost:3003';
-const DOCTOR_SERVICE_TIMEOUT = parseInt(process.env.DOCTOR_SERVICE_TIMEOUT || '10000', 10); // 10 seconds
+const DOCTOR_SERVICE_URL =
+  process.env.DOCTOR_SERVICE_URL || "http://localhost:3003";
+const DOCTOR_SERVICE_TIMEOUT = parseInt(
+  process.env.DOCTOR_SERVICE_TIMEOUT || "10000",
+  10,
+); // 10 seconds
 
 // Axios instance with Doctor service configuration
+// Doctor service mounts doctor routes at /api/doctors
 const doctorServiceClient = axios.create({
-  baseURL: DOCTOR_SERVICE_URL,
+  baseURL: `${DOCTOR_SERVICE_URL}/api/doctors`,
   timeout: DOCTOR_SERVICE_TIMEOUT,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 /**
  * Fetch doctors by specialization from Doctor microservice
- * 
+ *
  * @param {string} specialty - The medical specialization (e.g., 'Cardiology', 'Dermatology')
  * @param {Object} options - Optional filtering parameters
  * @param {string} options.status - Filter by doctor status ('active', 'inactive', 'pending')
@@ -40,11 +45,11 @@ const doctorServiceClient = axios.create({
  * @param {string} options.sortBy - Sort field (e.g., '-rating' for descending by rating)
  * @returns {Promise<Array>} Array of doctor objects matching the specialty
  * @throws {Error} If the Doctor service is unavailable or request fails
- * 
+ *
  * @example
  * // Fetch all active cardiologists
  * const cardiologists = await fetchDoctorsBySpecialty('Cardiology');
- * 
+ *
  * @example
  * // Fetch with custom pagination and sorting
  * const doctors = await fetchDoctorsBySpecialty('Neurology', {
@@ -56,13 +61,13 @@ const doctorServiceClient = axios.create({
  */
 export const fetchDoctorsBySpecialty = async (specialty, options = {}) => {
   try {
-    if (!specialty || typeof specialty !== 'string') {
-      throw new Error('Specialty parameter must be a non-empty string');
+    if (!specialty || typeof specialty !== "string") {
+      throw new Error("Specialty parameter must be a non-empty string");
     }
 
     // Build query parameters from options
     const queryParams = {
-      status: options.status || 'active', // Default to active doctors
+      status: options.status || "active", // Default to active doctors
       page: options.page || 1,
       limit: Math.min(options.limit || 10, 50), // Max 50 per page
       ...(options.sortBy && { sortBy: options.sortBy }),
@@ -70,26 +75,28 @@ export const fetchDoctorsBySpecialty = async (specialty, options = {}) => {
 
     // Remove undefined/null values
     Object.keys(queryParams).forEach(
-      key => (queryParams[key] === undefined || queryParams[key] === null) && delete queryParams[key]
+      (key) =>
+        (queryParams[key] === undefined || queryParams[key] === null) &&
+        delete queryParams[key],
     );
 
     console.log(
-      `[DoctorService] Fetching doctors for specialty: ${specialty} from ${DOCTOR_SERVICE_URL}/specialty/${specialty}`
+      `[DoctorService] Fetching doctors for specialty: ${specialty} from ${DOCTOR_SERVICE_URL}/specialty/${specialty}`,
     );
 
-    // Doctor service mounts routes at / (not /api/doctors)
+    // baseURL already includes /api/doctors
     const response = await doctorServiceClient.get(
       `/specialty/${encodeURIComponent(specialty)}`,
-      { params: queryParams }
+      { params: queryParams },
     );
 
     // Validate response structure
     if (!response.data || !Array.isArray(response.data.data)) {
-      throw new Error('Invalid response structure from Doctor service');
+      throw new Error("Invalid response structure from Doctor service");
     }
 
     console.log(
-      `[DoctorService] Successfully retrieved ${response.data.data.length} doctors for ${specialty}`
+      `[DoctorService] Successfully retrieved ${response.data.data.length} doctors for ${specialty}`,
     );
 
     // Return doctor list with pagination metadata
@@ -106,32 +113,41 @@ export const fetchDoctorsBySpecialty = async (specialty, options = {}) => {
       // Doctor service responded with an error status
       console.error(
         `[DoctorService] Error response from Doctor service (${error.response.status}):`,
-        error.response.data
+        error.response.data,
       );
 
       throw new Error(
         error.response.data?.message ||
-          `Doctor service error: ${error.response.status} ${error.response.statusText}`
+          `Doctor service error: ${error.response.status} ${error.response.statusText}`,
       );
-    } else if (error.code === 'ECONNREFUSED') {
+    } else if (error.code === "ECONNREFUSED") {
       // Doctor service is not running
-      console.error('[DoctorService] Doctor service is unavailable (connection refused)');
-      throw new Error(
-        `Doctor service unavailable. Is it running on ${DOCTOR_SERVICE_URL}?`
+      console.error(
+        "[DoctorService] Doctor service is unavailable (connection refused)",
       );
-    } else if (error.code === 'ENOTFOUND') {
-      // DNS resolution failed
-      console.error('[DoctorService] Doctor service hostname not found', error.message);
-      throw new Error('Doctor service hostname not found. Check DOCTOR_SERVICE_URL configuration.');
-    } else if (error.code === 'ETIMEDOUT') {
-      // Request timeout
-      console.error('[DoctorService] Request timeout while calling Doctor service');
       throw new Error(
-        `Doctor service request timeout (${DOCTOR_SERVICE_TIMEOUT}ms). Service may be overloaded.`
+        `Doctor service unavailable. Is it running on ${DOCTOR_SERVICE_URL}?`,
+      );
+    } else if (error.code === "ENOTFOUND") {
+      // DNS resolution failed
+      console.error(
+        "[DoctorService] Doctor service hostname not found",
+        error.message,
+      );
+      throw new Error(
+        "Doctor service hostname not found. Check DOCTOR_SERVICE_URL configuration.",
+      );
+    } else if (error.code === "ETIMEDOUT") {
+      // Request timeout
+      console.error(
+        "[DoctorService] Request timeout while calling Doctor service",
+      );
+      throw new Error(
+        `Doctor service request timeout (${DOCTOR_SERVICE_TIMEOUT}ms). Service may be overloaded.`,
       );
     } else {
       // Generic error
-      console.error('[DoctorService] Unexpected error:', error.message);
+      console.error("[DoctorService] Unexpected error:", error.message);
       throw new Error(`Failed to fetch doctors: ${error.message}`);
     }
   }
@@ -139,7 +155,7 @@ export const fetchDoctorsBySpecialty = async (specialty, options = {}) => {
 
 /**
  * Fetch a single doctor by ID from Doctor microservice
- * 
+ *
  * @param {string} doctorId - The doctor's MongoDB ObjectId or custom doctorId
  * @returns {Promise<Object>} Doctor object
  * @throws {Error} If doctor not found or service unavailable
@@ -147,15 +163,17 @@ export const fetchDoctorsBySpecialty = async (specialty, options = {}) => {
 export const fetchDoctorById = async (doctorId) => {
   try {
     if (!doctorId) {
-      throw new Error('Doctor ID is required');
+      throw new Error("Doctor ID is required");
     }
 
     console.log(`[DoctorService] Fetching doctor by ID: ${doctorId}`);
 
-    const response = await doctorServiceClient.get(`/${encodeURIComponent(doctorId)}`);
+    const response = await doctorServiceClient.get(
+      `/${encodeURIComponent(doctorId)}`,
+    );
 
     if (!response.data || !response.data.data) {
-      throw new Error('Invalid response structure from Doctor service');
+      throw new Error("Invalid response structure from Doctor service");
     }
 
     console.log(`[DoctorService] Successfully retrieved doctor: ${doctorId}`);
@@ -171,30 +189,33 @@ export const fetchDoctorById = async (doctorId) => {
     }
 
     if (error.response) {
-      console.error(`[DoctorService] Error response: ${error.response.status}`, error.response.data);
-      throw new Error(error.response.data?.message || 'Error fetching doctor');
+      console.error(
+        `[DoctorService] Error response: ${error.response.status}`,
+        error.response.data,
+      );
+      throw new Error(error.response.data?.message || "Error fetching doctor");
     }
 
-    console.error('[DoctorService] Error:', error.message);
+    console.error("[DoctorService] Error:", error.message);
     throw new Error(`Failed to fetch doctor: ${error.message}`);
   }
 };
 
 /**
  * Health check for Doctor service
- * 
+ *
  * @returns {Promise<boolean>} True if service is healthy
  */
 export const checkDoctorServiceHealth = async () => {
   try {
-    const response = await doctorServiceClient.get('/', {
+    const response = await doctorServiceClient.get("/", {
       timeout: 5000,
       params: { limit: 1 },
     });
-    console.log('[DoctorService] Health check passed');
+    console.log("[DoctorService] Health check passed");
     return true;
   } catch (error) {
-    console.error('[DoctorService] Health check failed:', error.message);
+    console.error("[DoctorService] Health check failed:", error.message);
     return false;
   }
 };

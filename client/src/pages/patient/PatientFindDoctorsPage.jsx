@@ -21,6 +21,7 @@ import LoadingState from "@/patient/components/ui/LoadingState";
 import ErrorState from "@/patient/components/ui/ErrorState";
 import ModalCard from "@/patient/components/ui/ModalCard";
 import { usePatientAuth } from "@/patient/context/PatientAuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 const ACCENT_COLORS = [
   "from-teal-500 to-emerald-400",
@@ -90,12 +91,10 @@ function RatingStars({ average = 0, count = 0 }) {
           />
         ))}
       </div>
-      <span className="text-xs font-semibold text-slate-700">
+      <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
         {average > 0 ? average.toFixed(1) : "New"}
       </span>
-      {count > 0 && (
-        <span className="text-xs text-slate-400">({count})</span>
-      )}
+      {count > 0 && <span className="text-xs text-slate-400">({count})</span>}
     </div>
   );
 }
@@ -108,7 +107,7 @@ function SpecialtyChip({ label, isActive, onClick }) {
       className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
         isActive
           ? "bg-teal-600 text-white shadow-md shadow-teal-200"
-          : "bg-white text-slate-600 border border-slate-200 hover:border-teal-300 hover:text-teal-700 hover:bg-teal-50"
+          : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-teal-300 hover:text-teal-700 hover:bg-teal-50"
       }`}
     >
       {label}
@@ -120,11 +119,14 @@ function SpecialtyChip({ label, isActive, onClick }) {
 function DoctorCard({ doctor, onBook }) {
   const rating = doctor.rating?.average || 0;
   const reviewCount = doctor.rating?.count || 0;
-  const specialty = doctor.specialty || doctor.specialization || "General Practice";
+  const specialty =
+    doctor.specialty || doctor.specialization || "General Practice";
 
   return (
-    <article className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-all duration-300 hover:shadow-lg hover:shadow-slate-200/50 hover:-translate-y-0.5">
-      <div className={`h-1.5 bg-gradient-to-r ${getAccentColor(doctor.name)}`} />
+    <article className="group relative overflow-hidden rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm transition-all duration-300 hover:shadow-lg hover:shadow-slate-200/50 hover:-translate-y-0.5">
+      <div
+        className={`h-1.5 bg-gradient-to-r ${getAccentColor(doctor.name)}`}
+      />
 
       <div className="p-5">
         <div className="flex gap-4">
@@ -137,7 +139,7 @@ function DoctorCard({ doctor, onBook }) {
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <h3 className="text-base font-bold text-slate-900 truncate">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white truncate">
                   Dr. {doctor.name || "Specialist"}
                 </h3>
                 <p className="text-sm font-medium text-teal-600 mt-0.5">
@@ -159,7 +161,7 @@ function DoctorCard({ doctor, onBook }) {
 
         <div className="mt-4 grid grid-cols-2 gap-2">
           {doctor.experience > 0 && (
-            <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2">
+            <div className="flex items-center gap-2 rounded-lg bg-slate-50 dark:bg-slate-800 px-3 py-2">
               <Award size={14} className="text-teal-600 flex-shrink-0" />
               <span className="text-xs text-slate-600 truncate">
                 {doctor.experience} yrs exp.
@@ -167,7 +169,7 @@ function DoctorCard({ doctor, onBook }) {
             </div>
           )}
           {doctor.hospital && (
-            <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2">
+            <div className="flex items-center gap-2 rounded-lg bg-slate-50 dark:bg-slate-800 px-3 py-2">
               <Building2 size={14} className="text-teal-600 flex-shrink-0" />
               <span className="text-xs text-slate-600 truncate">
                 {doctor.hospital}
@@ -175,7 +177,7 @@ function DoctorCard({ doctor, onBook }) {
             </div>
           )}
           {doctor.location && (
-            <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2">
+            <div className="flex items-center gap-2 rounded-lg bg-slate-50 dark:bg-slate-800 px-3 py-2">
               <MapPin size={14} className="text-teal-600 flex-shrink-0" />
               <span className="text-xs text-slate-600 truncate">
                 {doctor.location}
@@ -183,27 +185,30 @@ function DoctorCard({ doctor, onBook }) {
             </div>
           )}
           {doctor.languages?.length > 0 && (
-            <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2">
+            <div className="flex items-center gap-2 rounded-lg bg-slate-50 dark:bg-slate-800 px-3 py-2">
               <Globe size={14} className="text-teal-600 flex-shrink-0" />
               <span className="text-xs text-slate-600 truncate">
                 {doctor.languages.slice(0, 2).join(", ")}
-                {doctor.languages.length > 2 && ` +${doctor.languages.length - 2}`}
+                {doctor.languages.length > 2 &&
+                  ` +${doctor.languages.length - 2}`}
               </span>
             </div>
           )}
         </div>
 
-        <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
+        <div className="mt-4 flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-4">
           <div>
             {doctor.consultationFee > 0 ? (
               <>
-                <p className="text-lg font-bold text-slate-900">
+                <p className="text-lg font-bold text-slate-900 dark:text-white">
                   LKR {doctor.consultationFee.toLocaleString()}
                 </p>
                 <p className="text-xs text-slate-400">per session</p>
               </>
             ) : (
-              <p className="text-sm font-medium text-slate-400">Fee not listed</p>
+              <p className="text-sm font-medium text-slate-400">
+                Fee not listed
+              </p>
             )}
           </div>
           <button
@@ -222,7 +227,7 @@ function DoctorCard({ doctor, onBook }) {
 
 function DoctorCardSkeleton() {
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm animate-pulse">
+    <div className="overflow-hidden rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm animate-pulse">
       <div className="h-1.5 bg-slate-200" />
       <div className="p-5">
         <div className="flex gap-4">
@@ -237,7 +242,7 @@ function DoctorCardSkeleton() {
           <div className="h-9 rounded-lg bg-slate-100" />
           <div className="h-9 rounded-lg bg-slate-100" />
         </div>
-        <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
+        <div className="mt-4 flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-4">
           <div className="h-6 w-20 rounded bg-slate-200" />
           <div className="h-10 w-24 rounded-xl bg-slate-200" />
         </div>
@@ -248,6 +253,7 @@ function DoctorCardSkeleton() {
 
 export default function PatientFindDoctorsPage() {
   const { patientId, isLoadingAuth, authError } = usePatientAuth();
+  const { user } = useAuth();
   const [specialtyFilter, setSpecialtyFilter] = useState("");
   const [nameFilter, setNameFilter] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState(null);
@@ -269,9 +275,7 @@ export default function PatientFindDoctorsPage() {
 
       const matchesName =
         !nameFilter ||
-        (doctor.name || "")
-          .toLowerCase()
-          .includes(nameFilter.toLowerCase());
+        (doctor.name || "").toLowerCase().includes(nameFilter.toLowerCase());
 
       return matchesSpecialty && matchesName;
     });
@@ -279,7 +283,7 @@ export default function PatientFindDoctorsPage() {
 
   const specialties = useMemo(() => {
     const specs = new Set(
-      data.map((doc) => doc.specialty || doc.specialization || "General")
+      data.map((doc) => doc.specialty || doc.specialization || "General"),
     );
     return Array.from(specs).sort();
   }, [data]);
@@ -303,30 +307,34 @@ export default function PatientFindDoctorsPage() {
         patientId,
         doctorId: selectedDoctor._id || selectedDoctor.id,
         appointmentDate,
+        patientEmail: user?.email || "",
       });
       toast.success("Appointment booked successfully!");
       setSelectedDoctor(null);
       setAppointmentDate("");
     } catch (err) {
       toast.error(
-        err?.response?.data?.message || "Could not book appointment."
+        err?.response?.data?.message || "Could not book appointment.",
       );
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4 md:p-6 bg-[#F8FAFB] dark:bg-slate-950 min-h-screen transition-colors duration-300">
       {/* Page Header */}
       <div>
         <div className="flex items-center gap-3 mb-1">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-teal-100">
-            <Stethoscope size={20} className="text-teal-700" />
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-teal-100 dark:bg-teal-900/30">
+            <Stethoscope
+              size={20}
+              className="text-teal-700 dark:text-teal-400"
+            />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
               Find a Doctor
             </h1>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               Browse and book appointments with qualified specialists
             </p>
           </div>
@@ -343,7 +351,7 @@ export default function PatientFindDoctorsPage() {
           value={nameFilter}
           onChange={(e) => setNameFilter(e.target.value)}
           placeholder="Search doctors by name..."
-          className="w-full rounded-2xl border border-slate-200 bg-white py-3.5 pl-12 pr-4 text-sm text-slate-900 shadow-sm outline-none transition-all placeholder:text-slate-400 focus:border-teal-500 focus:ring-4 focus:ring-teal-50 focus:shadow-md"
+          className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-3.5 pl-12 pr-4 text-sm text-slate-900 shadow-sm outline-none transition-all placeholder:text-slate-400 focus:border-teal-500 focus:ring-4 focus:ring-teal-50 focus:shadow-md"
         />
         {nameFilter && (
           <button
@@ -416,7 +424,7 @@ export default function PatientFindDoctorsPage() {
 
       {/* Empty State */}
       {!isLoading && !error && !doctors.length && (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/50 py-16 px-8 text-center">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 dark:bg-slate-800/50 py-16 px-8 text-center">
           <div className="flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 mb-4">
             <Users size={28} className="text-slate-400" />
           </div>
@@ -435,7 +443,7 @@ export default function PatientFindDoctorsPage() {
                 setNameFilter("");
                 setSpecialtyFilter("");
               }}
-              className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-white border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:bg-slate-800 transition-colors shadow-sm"
             >
               <X size={14} />
               Clear filters
@@ -515,8 +523,7 @@ export default function PatientFindDoctorsPage() {
                 )}
                 {selectedDoctor.consultationFee > 0 && (
                   <p className="mt-1 text-sm font-semibold text-slate-700">
-                    LKR{" "}
-                    {selectedDoctor.consultationFee.toLocaleString()} per
+                    LKR {selectedDoctor.consultationFee.toLocaleString()} per
                     session
                   </p>
                 )}
@@ -538,7 +545,7 @@ export default function PatientFindDoctorsPage() {
                   value={appointmentDate}
                   onChange={(e) => setAppointmentDate(e.target.value)}
                   min={new Date().toISOString().slice(0, 16)}
-                  className="w-full rounded-xl border border-slate-200 py-3 pl-10 pr-3 text-sm outline-none transition-all focus:border-teal-500 focus:ring-4 focus:ring-teal-50"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 py-3 pl-10 pr-3 text-sm outline-none transition-all focus:border-teal-500 focus:ring-4 focus:ring-teal-50"
                 />
               </div>
               <p className="mt-1.5 text-xs text-slate-400">
@@ -554,7 +561,7 @@ export default function PatientFindDoctorsPage() {
                   setSelectedDoctor(null);
                   setAppointmentDate("");
                 }}
-                className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+                className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 dark:bg-slate-800 transition-colors"
               >
                 Cancel
               </button>

@@ -58,19 +58,22 @@ export default function PatientReportsPage() {
   };
 
   return (
-    <div className="space-y-5">
-      <SectionCard title="Upload Medical Report" subtitle="Supports PDF, JPG, and DICOM files">
+    <div className="space-y-5 p-4 md:p-6 bg-[#F8FAFB] dark:bg-slate-950 min-h-screen transition-colors duration-300">
+      <SectionCard
+        title="Upload Medical Report"
+        subtitle="Supports PDF, JPG, and DICOM files"
+      >
         <form onSubmit={handleUpload} className="grid gap-3 md:grid-cols-3">
           <input
             value={reportType}
             onChange={(event) => setReportType(event.target.value)}
-            className="rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-teal-600"
+            className="rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2.5 text-sm outline-none focus:border-teal-600"
             placeholder="Report type"
           />
           <input
             type="file"
             onChange={(event) => setFile(event.target.files?.[0] || null)}
-            className="rounded-xl border border-slate-200 px-3 py-2.5 text-sm"
+            className="rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2.5 text-sm"
           />
           <button
             type="submit"
@@ -84,19 +87,40 @@ export default function PatientReportsPage() {
       </SectionCard>
 
       <SectionCard title="My Reports">
-        {isLoadingAuth ? <LoadingState label="Loading patient session..." /> : null}
-        {!isLoadingAuth && authError ? <ErrorState message={authError} /> : null}
+        {isLoadingAuth ? (
+          <LoadingState label="Loading patient session..." />
+        ) : null}
+        {!isLoadingAuth && authError ? (
+          <ErrorState message={authError} />
+        ) : null}
         {isLoading ? <LoadingState label="Loading reports..." /> : null}
-        {!isLoading && error ? <ErrorState message={error} onRetry={refetch} /> : null}
-        {!isLoadingAuth && !authError && !isLoading && !error && !data.length ? (
-          <EmptyState title="No reports yet" description="Upload your first report to build your medical history." />
+        {!isLoading && error ? (
+          <ErrorState message={error} onRetry={refetch} />
+        ) : null}
+        {!isLoadingAuth &&
+        !authError &&
+        !isLoading &&
+        !error &&
+        !data.length ? (
+          <EmptyState
+            title="No reports yet"
+            description="Upload your first report to build your medical history."
+          />
         ) : null}
         {!isLoadingAuth && !authError && !isLoading && !error && data.length ? (
           <DataTable
             columns={[
               { key: "reportType", label: "Report Type" },
-              { key: "createdAt", label: "Uploaded At", render: (row) => new Date(row.createdAt).toLocaleDateString() },
-              { key: "status", label: "Status", render: (row) => <StatusBadge value={row.status || "active"} /> },
+              {
+                key: "createdAt",
+                label: "Uploaded At",
+                render: (row) => new Date(row.createdAt).toLocaleDateString(),
+              },
+              {
+                key: "status",
+                label: "Status",
+                render: (row) => <StatusBadge value={row.status || "active"} />,
+              },
             ]}
             rows={data}
             renderActions={(row) => (
@@ -106,7 +130,7 @@ export default function PatientReportsPage() {
                     href={row.fileUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:border-teal-600 hover:text-teal-700"
+                    className="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:border-teal-600 hover:text-teal-700"
                   >
                     <Download size={14} />
                     View

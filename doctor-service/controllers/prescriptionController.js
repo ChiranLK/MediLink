@@ -1,7 +1,7 @@
-import Prescription from '../models/Prescription.js';
-import Doctor from '../models/Doctor.js';
-import { StatusCodes } from 'http-status-codes';
-import { NotFoundError, BadRequestError } from '../errors/customErrors.js';
+import Prescription from "../models/Prescription.js";
+import Doctor from "../models/Doctor.js";
+import { StatusCodes } from "http-status-codes";
+import { NotFoundError, BadRequestError } from "../errors/customErrors.js";
 
 // ─── Helper: normalise medicine list ─────────────────────────────────────────
 /**
@@ -15,15 +15,21 @@ const normaliseMedicines = (medicines) => {
   if (!medicines) return [];
   const arr = Array.isArray(medicines) ? medicines : [medicines];
   return arr.map((m) => {
-    if (typeof m === 'string') {
-      return { name: m, dosage: '', frequency: '', duration: '', instructions: '' };
+    if (typeof m === "string") {
+      return {
+        name: m,
+        dosage: "",
+        frequency: "",
+        duration: "",
+        instructions: "",
+      };
     }
     return {
-      name: m.name || '',
-      dosage: m.dosage || '',
-      frequency: m.frequency || '',
-      duration: m.duration || '',
-      instructions: m.instructions || '',
+      name: m.name || "",
+      dosage: m.dosage || "",
+      frequency: m.frequency || "",
+      duration: m.duration || "",
+      instructions: m.instructions || "",
     };
   });
 };
@@ -31,9 +37,7 @@ const normaliseMedicines = (medicines) => {
 // ─── Helper: resolve doctor doc from string ID ───────────────────────────────
 const resolveDoctor = async (doctorId) => {
   const isObjectId = /^[0-9a-fA-F]{24}$/.test(doctorId);
-  return isObjectId
-    ? Doctor.findById(doctorId)
-    : Doctor.findOne({ doctorId });
+  return isObjectId ? Doctor.findById(doctorId) : Doctor.findOne({ doctorId });
 };
 
 // @desc    Create a new digital prescription
@@ -41,19 +45,32 @@ const resolveDoctor = async (doctorId) => {
 // @access  Doctor (Private)
 export const createPrescription = async (req, res, next) => {
   try {
-    const { doctorId, patientId, appointmentId, diagnosis, medicines, notes, followUpDate } = req.body;
+    const {
+      doctorId,
+      patientId,
+      appointmentId,
+      diagnosis,
+      medicines,
+      notes,
+      followUpDate,
+    } = req.body;
 
     if (!doctorId || !patientId || !diagnosis) {
-      throw new BadRequestError('Missing required fields: doctorId, patientId, diagnosis');
+      throw new BadRequestError(
+        "Missing required fields: doctorId, patientId, diagnosis",
+      );
     }
 
     const doctor = await resolveDoctor(doctorId);
     if (!doctor) {
-      throw new NotFoundError(`Cannot issue prescription. No doctor found with id: ${doctorId}`);
+      throw new NotFoundError(
+        `Cannot issue prescription. No doctor found with id: ${doctorId}`,
+      );
     }
 
     const newPrescription = await Prescription.create({
       doctorId: doctor.doctorId || doctor._id.toString(),
+      doctorName: doctor.name || "",
       patientId,
       appointmentId,
       diagnosis,
@@ -64,7 +81,7 @@ export const createPrescription = async (req, res, next) => {
 
     res.status(StatusCodes.CREATED).json({
       success: true,
-      message: 'Prescription created successfully',
+      message: "Prescription created successfully",
       data: newPrescription,
     });
   } catch (error) {
@@ -88,7 +105,11 @@ export const getPrescriptionsByDoctor = async (req, res, next) => {
     if (status) filter.status = status;
 
     const [prescriptions, total] = await Promise.all([
-      Prescription.find(filter).sort({ date: -1 }).skip(skip).limit(limitNum).lean(),
+      Prescription.find(filter)
+        .sort({ date: -1 })
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
       Prescription.countDocuments(filter),
     ]);
 
@@ -114,7 +135,9 @@ export const getPrescriptionsByPatient = async (req, res, next) => {
     const filter = { patientId };
     if (status) filter.status = status;
 
-    const prescriptions = await Prescription.find(filter).sort({ date: -1 }).lean();
+    const prescriptions = await Prescription.find(filter)
+      .sort({ date: -1 })
+      .lean();
 
     res.status(StatusCodes.OK).json({
       success: true,
@@ -161,16 +184,21 @@ export const updatePrescription = async (req, res, next) => {
     }
 
     // Only the issuing doctor or an admin can update
-    if (req.user && req.user.role !== 'admin' && prescription.doctorId !== req.user.userId) {
-      throw new BadRequestError('Not authorized to update this prescription');
+    if (
+      req.user &&
+      req.user.role !== "admin" &&
+      prescription.doctorId !== req.user.userId
+    ) {
+      throw new BadRequestError("Not authorized to update this prescription");
     }
 
     const updateData = {};
-    if (diagnosis)     updateData.diagnosis   = diagnosis;
-    if (medicines)     updateData.medicines   = normaliseMedicines(medicines);
+    if (diagnosis) updateData.diagnosis = diagnosis;
+    if (medicines) updateData.medicines = normaliseMedicines(medicines);
     if (notes !== undefined) updateData.notes = notes;
-    if (followUpDate !== undefined) updateData.followUpDate = followUpDate || null;
-    if (status)        updateData.status      = status;
+    if (followUpDate !== undefined)
+      updateData.followUpDate = followUpDate || null;
+    if (status) updateData.status = status;
 
     const updated = await Prescription.findByIdAndUpdate(id, updateData, {
       new: true,
@@ -179,7 +207,7 @@ export const updatePrescription = async (req, res, next) => {
 
     res.status(StatusCodes.OK).json({
       success: true,
-      message: 'Prescription updated successfully',
+      message: "Prescription updated successfully",
       data: updated,
     });
   } catch (error) {
@@ -200,15 +228,19 @@ export const deletePrescription = async (req, res, next) => {
     }
 
     // Only the issuing doctor or an admin can cancel
-    if (req.user && req.user.role !== 'admin' && prescription.doctorId !== req.user.userId) {
-      throw new BadRequestError('Not authorized to cancel this prescription');
+    if (
+      req.user &&
+      req.user.role !== "admin" &&
+      prescription.doctorId !== req.user.userId
+    ) {
+      throw new BadRequestError("Not authorized to cancel this prescription");
     }
 
     await Prescription.findByIdAndDelete(id);
 
     res.status(StatusCodes.OK).json({
       success: true,
-      message: 'Prescription cancelled/deleted successfully',
+      message: "Prescription cancelled/deleted successfully",
       data: {},
     });
   } catch (error) {

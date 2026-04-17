@@ -1,46 +1,35 @@
-import sendGridMail from "@sendgrid/mail";
+import nodemailer from "nodemailer";
 
-const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
 const EMAIL_FROM = process.env.EMAIL_FROM;
+const GMAIL_USER = process.env.GMAIL_USER;
+const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
 
-if (SENDGRID_API_KEY) {
-  sendGridMail.setApiKey(SENDGRID_API_KEY);
-}
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: GMAIL_USER,
+    pass: GMAIL_APP_PASSWORD,
+  },
+});
 
-/**
- * Extracts a readable message from SendGrid's error shape.
- * @param {unknown} error
- */
-function parseSendGridError(error) {
-  const body = error.response?.body;
-  if (body?.errors?.length) {
-    return body.errors.map((e) => e.message || e.field || "").filter(Boolean).join("; ") || "SendGrid rejected the request.";
-  }
-  if (typeof body === "string" && body.trim()) return body;
-  if (error.message) return error.message;
-  return "SendGrid email send failed.";
-}
-
-// Sends a plain text email through SendGrid.
-export async function sendEmailNotification({ to, subject, text }) {
-  if (!SENDGRID_API_KEY || !EMAIL_FROM) {
+// Sends an email through Gmail SMTP via Nodemailer.
+export async function sendEmailNotification({ to, subject, text, html }) {
+  if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
     throw new Error(
-      "SendGrid is not configured. Set SENDGRID_API_KEY and EMAIL_FROM."
+      "Gmail SMTP is not configured. Set GMAIL_USER and GMAIL_APP_PASSWORD.",
     );
   }
 
   try {
-    await sendGridMail.send({
+    await transporter.sendMail({
+      from: `"MediLink" <${EMAIL_FROM || GMAIL_USER}>`,
       to,
-      from: EMAIL_FROM,
       subject,
       text,
+      html: html || undefined,
     });
   } catch (error) {
-    console.error(
-      "Email send failed:",
-      error.response?.body || error.message
-    );
-    throw new Error(parseSendGridError(error));
+    console.error("Email send failed:", error.message);
+    throw new Error(`Email send failed: ${error.message}`);
   }
 }

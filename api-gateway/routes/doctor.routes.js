@@ -12,7 +12,8 @@ router.use(
   createProxyMiddleware({
     target: process.env.DOCTOR_SERVICE,
     changeOrigin: true,
-  })
+    pathRewrite: (path) => `/api/doctors${path === "/" ? "" : path}`,
+  }),
 );
 
 export default router;

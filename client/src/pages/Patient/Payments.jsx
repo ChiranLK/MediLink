@@ -57,15 +57,15 @@ const formatDateTime = (dateStr) => {
 };
 
 const StatCard = ({ icon: Icon, label, value, subtext, color }) => (
-  <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+  <div className="bg-white dark:bg-slate-900 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-slate-800">
     <div className="flex items-center gap-3 mb-2">
       <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${color}`}>
         <Icon size={20} className="text-white" />
       </div>
-      <span className="text-sm font-medium" style={{ color: '#64748b' }}>{label}</span>
+      <span className="text-sm font-medium text-slate-600 dark:text-slate-400">{label}</span>
     </div>
-    <p className="text-2xl font-bold" style={{ color: '#1e293b' }}>{value}</p>
-    {subtext && <p className="text-xs mt-1" style={{ color: '#94a3b8' }}>{subtext}</p>}
+    <p className="text-2xl font-bold text-slate-900 dark:text-white">{value}</p>
+    {subtext && <p className="text-xs mt-1 text-slate-500 dark:text-slate-400">{subtext}</p>}
   </div>
 );
 
@@ -74,29 +74,29 @@ const PaymentRow = ({ payment, onView }) => {
   const StatusIcon = config.icon;
 
   return (
-    <tr className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+    <tr className="border-b border-gray-50 hover:bg-gray-50 dark:bg-slate-800/50 transition-colors">
       <td className="py-4 px-4">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center flex-shrink-0">
             <CreditCard size={16} className="text-white" />
           </div>
           <div>
-            <p className="font-semibold text-sm" style={{ color: '#1e293b' }}>
+            <p className="font-semibold text-sm text-slate-800 dark:text-slate-200">
               {TYPE_LABELS[payment.paymentType] || payment.paymentType}
             </p>
-            <p className="text-xs" style={{ color: '#94a3b8' }}>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               {payment.metadata?.doctorName || payment.metadata?.description || `#${payment._id?.slice(-8)}`}
             </p>
           </div>
         </div>
       </td>
       <td className="py-4 px-4">
-        <p className="font-bold text-sm" style={{ color: '#1e293b' }}>
+        <p className="font-bold text-sm text-slate-800 dark:text-slate-200">
           {formatCurrency(payment.amount, payment.currency)}
         </p>
       </td>
       <td className="py-4 px-4">
-        <p className="text-sm" style={{ color: '#475569' }}>{formatDate(payment.createdAt)}</p>
+        <p className="text-sm text-slate-600 dark:text-slate-400">{formatDate(payment.createdAt)}</p>
       </td>
       <td className="py-4 px-4">
         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${config.color}`}>
@@ -125,11 +125,11 @@ const PaymentDetailModal = ({ payment, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div
-        className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden"
+        className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-gradient-to-r from-teal-600 to-emerald-600 p-6 text-white relative">
-          <button onClick={onClose} className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/20 transition">
+          <button onClick={onClose} className="absolute top-4 right-4 p-1 rounded-full hover:bg-white dark:bg-slate-900/20 transition">
             <X size={20} />
           </button>
           <div className="flex items-center gap-3 mb-3">
@@ -142,7 +142,7 @@ const PaymentDetailModal = ({ payment, onClose }) => {
 
         <div className="p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm" style={{ color: '#64748b' }}>Status</span>
+            <span className="text-sm text-slate-600 dark:text-slate-400">Status</span>
             <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${config.color}`}>
               <StatusIcon size={12} />
               {config.label}
@@ -150,39 +150,39 @@ const PaymentDetailModal = ({ payment, onClose }) => {
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-sm" style={{ color: '#64748b' }}>Type</span>
-            <span className="font-semibold text-sm" style={{ color: '#1e293b' }}>
+            <span className="text-sm text-slate-600 dark:text-slate-400">Type</span>
+            <span className="font-semibold text-sm text-slate-800 dark:text-slate-200">
               {TYPE_LABELS[payment.paymentType] || payment.paymentType}
             </span>
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-sm" style={{ color: '#64748b' }}>Payment Method</span>
-            <span className="font-semibold text-sm" style={{ color: '#1e293b' }}>
+            <span className="text-sm text-slate-600 dark:text-slate-400">Payment Method</span>
+            <span className="font-semibold text-sm text-slate-800 dark:text-slate-200">
               {payment.paymentMethod ? payment.paymentMethod.charAt(0).toUpperCase() + payment.paymentMethod.slice(1) : '—'}
             </span>
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-sm" style={{ color: '#64748b' }}>Currency</span>
-            <span className="font-semibold text-sm" style={{ color: '#1e293b' }}>
+            <span className="text-sm text-slate-600 dark:text-slate-400">Currency</span>
+            <span className="font-semibold text-sm text-slate-800 dark:text-slate-200">
               {(payment.currency || 'lkr').toUpperCase()}
             </span>
           </div>
 
           {payment.metadata?.doctorName && (
             <div className="flex items-center justify-between">
-              <span className="text-sm" style={{ color: '#64748b' }}>Doctor</span>
-              <span className="font-semibold text-sm" style={{ color: '#1e293b' }}>
+              <span className="text-sm text-slate-600 dark:text-slate-400">Doctor</span>
+              <span className="font-semibold text-sm text-slate-800 dark:text-slate-200">
                 {payment.metadata.doctorName}
               </span>
             </div>
           )}
 
           {payment.metadata?.description && (
-            <div className="pt-3 border-t border-gray-100">
-              <span className="text-sm block mb-1" style={{ color: '#64748b' }}>Description</span>
-              <p className="text-sm" style={{ color: '#334155' }}>{payment.metadata.description}</p>
+            <div className="pt-3 border-t border-gray-100 dark:border-slate-800">
+              <span className="text-sm block mb-1" >Description</span>
+              <p className="text-sm text-slate-600 dark:text-slate-400">{payment.metadata.description}</p>
             </div>
           )}
 
@@ -197,12 +197,12 @@ const PaymentDetailModal = ({ payment, onClose }) => {
             </a>
           )}
 
-          <div className="pt-3 border-t border-gray-100 space-y-1">
-            <p className="text-xs" style={{ color: '#94a3b8' }}>
+          <div className="pt-3 border-t border-gray-100 dark:border-slate-800 space-y-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Payment ID: {payment._id}
             </p>
             {payment.stripeCheckoutSessionId && (
-              <p className="text-xs truncate" style={{ color: '#94a3b8' }}>
+              <p className="text-xs truncate" >
                 Session: {payment.stripeCheckoutSessionId}
               </p>
             )}
@@ -213,7 +213,7 @@ const PaymentDetailModal = ({ payment, onClose }) => {
           <button
             onClick={onClose}
             className="w-full py-3 bg-gray-100 hover:bg-gray-200 rounded-xl font-semibold text-sm transition"
-            style={{ color: '#475569' }}
+            
           >
             Close
           </button>
@@ -302,10 +302,10 @@ const PatientPayments = () => {
   ];
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-6">
+    <div className="w-full max-w-6xl mx-auto p-4 md:p-6 bg-[#F8FAFB] dark:bg-slate-950 min-h-screen transition-colors duration-300">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold" style={{ color: '#1e293b' }}>Payments</h1>
-        <p className="text-sm mt-1" style={{ color: '#64748b' }}>Track and manage your payment history</p>
+        <h1 className="text-3xl font-bold text-[#112429] dark:text-white">Payments</h1>
+        <p className="text-sm mt-1 text-slate-500 dark:text-slate-400">Track and manage your payment history</p>
       </div>
 
       {/* Stats */}
@@ -338,7 +338,7 @@ const PatientPayments = () => {
       </div>
 
       {/* Filters + Search */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6">
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 gap-4">
           <div className="flex gap-1 overflow-x-auto">
             {filterTabs.map(tab => (
@@ -348,7 +348,7 @@ const PatientPayments = () => {
                 className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition ${
                   activeFilter === tab.id
                     ? 'bg-teal-50 text-teal-700'
-                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                    : 'text-gray-500 hover:bg-gray-50 dark:bg-slate-800 hover:text-gray-700'
                 }`}
               >
                 {tab.label}
@@ -362,7 +362,7 @@ const PatientPayments = () => {
               placeholder="Search payments..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none w-full sm:w-64 bg-white text-gray-900"
+              className="pl-9 pr-4 py-2 border border-gray-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none w-full sm:w-64 bg-white dark:bg-slate-900 text-gray-900"
             />
           </div>
         </div>
@@ -371,12 +371,12 @@ const PatientPayments = () => {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-t border-b border-gray-100 bg-gray-50/50">
-                <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider" style={{ color: '#64748b' }}>Payment</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider" style={{ color: '#64748b' }}>Amount</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider" style={{ color: '#64748b' }}>Date</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider" style={{ color: '#64748b' }}>Status</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider" style={{ color: '#64748b' }}></th>
+              <tr className="border-t border-b border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-800/50">
+                <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider" >Payment</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider" >Amount</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider" >Date</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider" >Status</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider" ></th>
               </tr>
             </thead>
             <tbody>
@@ -402,10 +402,10 @@ const PatientPayments = () => {
                       <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
                         <Receipt size={28} className="text-gray-300" />
                       </div>
-                      <h3 className="text-lg font-semibold mb-1" style={{ color: '#475569' }}>
+                      <h3 className="text-lg font-semibold mb-1" >
                         {searchTerm ? 'No matching payments' : 'No payments yet'}
                       </h3>
-                      <p className="text-sm" style={{ color: '#94a3b8' }}>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
                         {searchTerm
                           ? 'Try adjusting your search or filters'
                           : 'Your payment history will appear here after you book an appointment'}
@@ -420,24 +420,24 @@ const PatientPayments = () => {
 
         {/* Pagination */}
         {pagination.pages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-            <p className="text-sm" style={{ color: '#64748b' }}>
+          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 dark:border-slate-800">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
               Page {page} of {pagination.pages} ({pagination.total} total)
             </p>
             <div className="flex gap-2">
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                className="p-2 rounded-lg border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
               >
-                <ChevronLeft size={16} style={{ color: '#475569' }} />
+                <ChevronLeft size={16}  />
               </button>
               <button
                 onClick={() => setPage(p => Math.min(pagination.pages, p + 1))}
                 disabled={page === pagination.pages}
-                className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                className="p-2 rounded-lg border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
               >
-                <ChevronRight size={16} style={{ color: '#475569' }} />
+                <ChevronRight size={16}  />
               </button>
             </div>
           </div>

@@ -16,29 +16,55 @@ app.use(morgan("combined"));
 
 // Dynamically import routes after env config is loaded
 async function setupRoutes() {
-  const authRoutes        = await import("./routes/auth.routes.js").then(m => m.default);
-  const userRoutes        = await import("./routes/users.routes.js").then(m => m.default);
-  const rootUserRoutes    = await import("./routes/root-users.routes.js").then(m => m.default);
-  const patientRoutes     = await import("./routes/patient.routes.js").then(m => m.default);
-  const doctorRoutes      = await import("./routes/doctor.routes.js").then(m => m.default);
-  const availabilityRoutes   = await import("./routes/availability.routes.js").then(m => m.default);
-  const prescriptionRoutes   = await import("./routes/prescription.routes.js").then(m => m.default);
-  const uploadRoutes         = await import("./routes/upload.routes.js").then(m => m.default);
-  const appointmentRoutes    = await import("./routes/appointment.routes.js").then(m => m.default);
-  const paymentRoutes        = await import("./routes/payment.routes.js").then(m => m.default);
-  const aiRoutes             = await import("./routes/ai.routes.js").then(m => m.default);
-  const notificationRoutes   = await import("./routes/notification.routes.js").then(m => m.default);
-  const telemedicineRoutes   = await import("./routes/telemedicine.routes.js").then(m => m.default);
+  const authRoutes = await import("./routes/auth.routes.js").then(
+    (m) => m.default,
+  );
+  const userRoutes = await import("./routes/users.routes.js").then(
+    (m) => m.default,
+  );
+  const rootUserRoutes = await import("./routes/root-users.routes.js").then(
+    (m) => m.default,
+  );
+  const patientRoutes = await import("./routes/patient.routes.js").then(
+    (m) => m.default,
+  );
+  const doctorRoutes = await import("./routes/doctor.routes.js").then(
+    (m) => m.default,
+  );
+  const availabilityRoutes =
+    await import("./routes/availability.routes.js").then((m) => m.default);
+  const prescriptionRoutes =
+    await import("./routes/prescription.routes.js").then((m) => m.default);
+  const uploadRoutes = await import("./routes/upload.routes.js").then(
+    (m) => m.default,
+  );
+  const appointmentRoutes = await import("./routes/appointment.routes.js").then(
+    (m) => m.default,
+  );
+  const paymentRoutes = await import("./routes/payment.routes.js").then(
+    (m) => m.default,
+  );
+  const aiRoutes = await import("./routes/ai.routes.js").then((m) => m.default);
+  const notificationRoutes =
+    await import("./routes/notification.routes.js").then((m) => m.default);
+  const telemedicineRoutes =
+    await import("./routes/telemedicine.routes.js").then((m) => m.default);
+  const consultationRoutes =
+    await import("./routes/consultation.routes.js").then((m) => m.default);
 
   // ── Public auth routes ─────────────────────────────────────────────────────
   app.use("/api/auth", authRoutes);
   app.use("/api/notification", notificationRoutes);
 
-  const doctorExtraRoutes = await import("./routes/doctor-extra.routes.js").then(m => m.default);
+  const doctorExtraRoutes =
+    await import("./routes/doctor-extra.routes.js").then((m) => m.default);
 
   app.use("/api/patient", verifyToken, patientRoutes);
   app.use("/api/doctor", verifyToken, doctorRoutes);
   app.use("/api/doctors", verifyToken, doctorRoutes);
+  app.use("/api/availability", verifyToken, availabilityRoutes);
+  app.use("/api/prescriptions", verifyToken, prescriptionRoutes);
+  app.use("/api/upload", verifyToken, uploadRoutes);
   app.use("/api/appointment", verifyToken, appointmentRoutes);
   app.use("/api/appointments", verifyToken, appointmentRoutes); // Support both singular and plural
   app.use("/api/payment", verifyToken, paymentRoutes);
@@ -46,7 +72,8 @@ async function setupRoutes() {
 
   // ── Telemedicine service ───────────────────────────────────────────────────
   app.use("/api/telemedicine", verifyToken, telemedicineRoutes);
-  
+  app.use("/api/consultations", verifyToken, consultationRoutes);
+
   app.get("/health", (req, res) => {
     res.status(200).json({ success: true, message: "API Gateway running" });
   });
@@ -62,7 +89,7 @@ async function setupRoutes() {
   });
 }
 
-setupRoutes().catch(err => {
+setupRoutes().catch((err) => {
   console.error("Failed to setup routes:", err);
   process.exit(1);
 });

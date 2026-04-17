@@ -458,7 +458,7 @@ const Availability = () => {
 
             {/* Buffer Time */}
             <div>
-              <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center justify-between mb-2">
                 <label className="font-bold text-[14px] text-[#0D1C2E] dark:text-slate-100">
                   Buffer Time
                 </label>

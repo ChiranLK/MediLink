@@ -1,6 +1,25 @@
-import { StatusCodes } from 'http-status-codes';
-import { BadRequestError, NotFoundError } from '../errors/customErrors.js';
-import Consultation from '../models/Consultation.js';
+import { StatusCodes } from "http-status-codes";
+import { BadRequestError, NotFoundError } from "../errors/customErrors.js";
+import Consultation from "../models/Consultation.js";
+import Doctor from "../models/Doctor.js";
+import {
+  sendNotification,
+  sendDoctorNotification,
+} from "../services/notificationClient.js";
+import { fetchAppointmentById } from "../services/appointmentClient.js";
+
+/** Strip "dr"/"dr." prefix and title-case for notification templates */
+const cleanDoctorName = (name) => {
+  if (!name || typeof name !== "string") return "";
+  let t = name.trim().replace(/^dr\.?\s*/i, "");
+  if (!t) t = name.trim();
+  return t
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+};
 
 /**
  * VIDEO CONSULTATION CONTROLLER
@@ -15,7 +34,9 @@ export const createConsultationSession = async (req, res, next) => {
     const { appointmentId, doctorId, patientId, notes } = req.body;
 
     if (!appointmentId || !doctorId || !patientId) {
-      throw new BadRequestError('Required fields missing: appointmentId, doctorId, patientId');
+      throw new BadRequestError(
+        "Required fields missing: appointmentId, doctorId, patientId",
+      );
     }
 
     // Return existing session if already created for this appointment
@@ -23,7 +44,8 @@ export const createConsultationSession = async (req, res, next) => {
     if (existingSession) {
       return res.status(StatusCodes.OK).json({
         success: true,
-        message: 'Session already exists for this appointment — returning existing link',
+        message:
+          "Session already exists for this appointment — returning existing link",
         data: existingSession,
       });
     }
@@ -37,14 +59,14 @@ export const createConsultationSession = async (req, res, next) => {
       doctorId,
       patientId,
       meetingLink,
-      platform: 'JITSI',
-      status: 'scheduled',
+      platform: "JITSI",
+      status: "scheduled",
       notes: notes || null,
     });
 
     res.status(StatusCodes.CREATED).json({
       success: true,
-      message: 'Video consultation session created successfully',
+      message: "Video consultation session created successfully",
       data: newSession,
     });
   } catch (error) {
@@ -96,7 +118,9 @@ export const getConsultationByAppointment = async (req, res, next) => {
 
     const session = await Consultation.findOne({ appointmentId });
     if (!session) {
-      throw new NotFoundError(`No video consultation found for appointment: ${appointmentId}`);
+      throw new NotFoundError(
+        `No video consultation found for appointment: ${appointmentId}`,
+      );
     }
 
     res.status(StatusCodes.OK).json({
@@ -116,10 +140,10 @@ export const updateConsultationStatus = async (req, res, next) => {
     const { appointmentId } = req.params;
     const { status, notes } = req.body;
 
-    const VALID_STATUSES = ['scheduled', 'active', 'completed', 'cancelled'];
+    const VALID_STATUSES = ["scheduled", "active", "completed", "cancelled"];
     if (!VALID_STATUSES.includes(status)) {
       throw new BadRequestError(
-        `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}`
+        `Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}`,
       );
     }
 
@@ -127,17 +151,54 @@ export const updateConsultationStatus = async (req, res, next) => {
     if (notes !== undefined) updateData.notes = notes;
 
     // Set timestamps automatically based on status transitions
-    if (status === 'active')    updateData.startedAt = new Date();
-    if (status === 'completed' || status === 'cancelled') updateData.endedAt = new Date();
+    if (status === "active") updateData.startedAt = new Date();
+    if (status === "completed" || status === "cancelled")
+      updateData.endedAt = new Date();
 
     const session = await Consultation.findOneAndUpdate(
       { appointmentId },
       updateData,
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     if (!session) {
-      throw new NotFoundError(`No video consultation found for appointment: ${appointmentId}`);
+      throw new NotFoundError(
+        `No video consultation found for appointment: ${appointmentId}`,
+      );
+    }
+
+    // Fire consultation-completed notification — fire-and-forget
+    if (status === "completed") {
+      const authToken = req.headers?.authorization?.split(" ")[1];
+      const appt = await fetchAppointmentById(appointmentId, authToken);
+
+      // Notify patient (email + SMS)
+      if (appt?.patientEmail && appt?.patientName && appt?.contactPhone) {
+        sendNotification({
+          email: appt.patientEmail,
+          phone: appt.contactPhone,
+          name: appt.patientName,
+          type: "CONSULTATION_COMPLETED",
+        });
+      }
+
+      // Notify doctor (email + SMS)
+      try {
+        const doctor = await Doctor.findOne({
+          doctorId: session.doctorId,
+        }).lean();
+        if (doctor?.email && doctor?.name && doctor?.phone) {
+          sendDoctorNotification({
+            email: doctor.email,
+            phone: doctor.phone,
+            name: cleanDoctorName(doctor.name),
+            type: "CONSULTATION_COMPLETED_DOCTOR",
+            patientName: appt?.patientName,
+          });
+        }
+      } catch {
+        // Non-critical — doctor lookup failure should not affect response
+      }
     }
 
     res.status(StatusCodes.OK).json({
@@ -159,22 +220,24 @@ export const updateConsultationNotes = async (req, res, next) => {
     const { notes } = req.body;
 
     if (notes === undefined) {
-      throw new BadRequestError('notes field is required');
+      throw new BadRequestError("notes field is required");
     }
 
     const session = await Consultation.findOneAndUpdate(
       { appointmentId },
       { notes },
-      { new: true }
+      { new: true },
     );
 
     if (!session) {
-      throw new NotFoundError(`No video consultation found for appointment: ${appointmentId}`);
+      throw new NotFoundError(
+        `No video consultation found for appointment: ${appointmentId}`,
+      );
     }
 
     res.status(StatusCodes.OK).json({
       success: true,
-      message: 'Consultation notes updated',
+      message: "Consultation notes updated",
       data: session,
     });
   } catch (error) {
@@ -216,4 +279,3 @@ export const getConsultationsByPatient = async (req, res, next) => {
     next(error);
   }
 };
-
